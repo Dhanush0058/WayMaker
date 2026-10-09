@@ -131,7 +131,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="mt-6 pt-4 border-t border-gray-150">
         <div className="flex items-center justify-between mb-3 px-1">
           <h3 className="font-extrabold text-xs text-gray-900">Real-time Feed</h3>
-          <button className="text-[11px] font-bold text-[#16A34A] hover:underline cursor-pointer">
+          <button
+            onClick={() => setActiveTab('reports')}
+            className="text-[11px] font-bold text-[#16A34A] hover:underline cursor-pointer"
+          >
             See All
           </button>
         </div>
@@ -139,10 +142,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="space-y-2 overflow-y-auto max-h-[320px] pr-1">
           {displayFeed.map((item) => {
             const Icon = item.icon;
+            const targetTab = item.title.includes('Bus')
+              ? 'buses'
+              : item.title.includes('Signal')
+              ? 'signals'
+              : item.title.includes('Ambulance')
+              ? 'ambulances'
+              : 'incidents';
+
             return (
               <div
                 key={item.id}
-                className="p-2.5 rounded-xl border border-gray-100 hover:border-gray-200 bg-gray-50/50 hover:bg-gray-50 transition flex items-center justify-between text-xs cursor-pointer"
+                onClick={() => setActiveTab(targetTab)}
+                className="p-2.5 rounded-xl border border-gray-100 hover:border-[#16A34A]/50 bg-gray-50/50 hover:bg-white transition flex items-center justify-between text-xs cursor-pointer shadow-2xs hover:shadow-xs"
               >
                 <div className="flex items-start gap-2.5">
                   <div className={`p-1.5 rounded-lg border ${item.bgIcon} shrink-0 mt-0.5`}>

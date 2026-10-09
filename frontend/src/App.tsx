@@ -6,6 +6,16 @@ import { ScenarioBar } from './components/ScenarioBar';
 import { LiveMap } from './components/LiveMap';
 import { RightSidebar } from './components/RightSidebar';
 import { EvaluationMetricsModal } from './components/EvaluationMetricsModal';
+
+// Views for every sidebar option
+import { IncidentsView } from './components/views/IncidentsView';
+import { BusesView } from './components/views/BusesView';
+import { AmbulancesView } from './components/views/AmbulancesView';
+import { SignalsView } from './components/views/SignalsView';
+import { AnalyticsView } from './components/views/AnalyticsView';
+import { ReportsView } from './components/views/ReportsView';
+import { SettingsView } from './components/views/SettingsView';
+
 import { SnapshotData } from './types';
 
 const API_BASE = 'http://127.0.0.1:8000';
@@ -27,7 +37,7 @@ export const App: React.FC = () => {
         setData(json);
       }
     } catch (err) {
-      // Backend may be booting
+      // Backend may be starting
     }
   };
 
@@ -125,45 +135,91 @@ export const App: React.FC = () => {
           events={data?.events ?? []}
         />
 
-        {/* Center: Live Map & Metric Cards */}
+        {/* Center: Dynamic View Area based on Selected Tab */}
         <main className="flex-1 p-5 overflow-y-auto space-y-4">
-          {/* Top 4 Summary Cards */}
-          <MetricCards summary={data?.summary} />
+          {activeTab === 'live-map' && (
+            <>
+              {/* Top 4 Summary Cards */}
+              <MetricCards summary={data?.summary} />
 
-          {/* Scenario Trigger & Playback Bar */}
-          <ScenarioBar
-            simulationState={data?.summary.simulation_state ?? 'IDLE'}
-            onStart={handleStart}
-            onPause={handlePause}
-            onReset={handleReset}
-            onTriggerWaterBreak={handleTriggerWaterBreak}
-            onDispatchAmbulance={handleDispatchAmbulance}
-            onTriggerFalseAlarm={handleTriggerFalseAlarm}
-            onTriggerSecondaryAccident={handleTriggerSecondaryAccident}
-            onOpenMetrics={() => setIsMetricsOpen(true)}
-          />
+              {/* Scenario Trigger & Playback Bar */}
+              <ScenarioBar
+                simulationState={data?.summary.simulation_state ?? 'IDLE'}
+                onStart={handleStart}
+                onPause={handlePause}
+                onReset={handleReset}
+                onTriggerWaterBreak={handleTriggerWaterBreak}
+                onDispatchAmbulance={handleDispatchAmbulance}
+                onTriggerFalseAlarm={handleTriggerFalseAlarm}
+                onTriggerSecondaryAccident={handleTriggerSecondaryAccident}
+                onOpenMetrics={() => setIsMetricsOpen(true)}
+              />
 
-          {/* Central Live Map */}
-          <LiveMap
-            vehicles={data?.vehicles ?? []}
-            hazards={data?.hazards ?? []}
-            signals={data?.signals ?? []}
-            ambulance={data?.ambulance}
-            segments={data?.segments ?? []}
-            onSelectHazard={(h) => console.log('Selected hazard', h)}
-          />
+              {/* Central Live Map */}
+              <LiveMap
+                vehicles={data?.vehicles ?? []}
+                hazards={data?.hazards ?? []}
+                signals={data?.signals ?? []}
+                ambulance={data?.ambulance}
+                segments={data?.segments ?? []}
+                onSelectHazard={() => setActiveTab('incidents')}
+              />
+            </>
+          )}
+
+          {activeTab === 'incidents' && (
+            <IncidentsView
+              hazards={data?.hazards ?? []}
+              onVerifyHazard={handleVerifyHazard}
+              onTriggerWaterBreak={handleTriggerWaterBreak}
+            />
+          )}
+
+          {activeTab === 'buses' && (
+            <BusesView
+              vehicles={data?.vehicles ?? []}
+              onTriggerFalseAlarm={handleTriggerFalseAlarm}
+              onTriggerWaterBreak={handleTriggerWaterBreak}
+            />
+          )}
+
+          {activeTab === 'ambulances' && (
+            <AmbulancesView
+              ambulance={data?.ambulance}
+              onDispatch={handleDispatchAmbulance}
+              onSecondaryAccident={handleTriggerSecondaryAccident}
+            />
+          )}
+
+          {activeTab === 'signals' && (
+            <SignalsView signals={data?.signals ?? []} />
+          )}
+
+          {activeTab === 'analytics' && (
+            <AnalyticsView metrics={data?.metrics} />
+          )}
+
+          {activeTab === 'reports' && (
+            <ReportsView events={data?.events ?? []} />
+          )}
+
+          {activeTab === 'settings' && (
+            <SettingsView onReset={handleReset} />
+          )}
         </main>
 
-        {/* Right: Selected Ambulance & Hazard Information Cards */}
-        <div className="p-5 pl-0 hidden xl:block">
-          <RightSidebar
-            ambulance={data?.ambulance}
-            hazards={data?.hazards ?? []}
-            onDispatch={handleDispatchAmbulance}
-            onVerifyHazard={handleVerifyHazard}
-            onFocusMap={() => console.log('Focus map')}
-          />
-        </div>
+        {/* Right: Selected Ambulance & Hazard Information Cards (Visible on Live Map tab) */}
+        {activeTab === 'live-map' && (
+          <div className="p-5 pl-0 hidden xl:block">
+            <RightSidebar
+              ambulance={data?.ambulance}
+              hazards={data?.hazards ?? []}
+              onDispatch={handleDispatchAmbulance}
+              onVerifyHazard={handleVerifyHazard}
+              onFocusMap={() => console.log('Focus map')}
+            />
+          </div>
+        )}
       </div>
 
       {/* Evaluation & Benchmark Metrics Modal */}
