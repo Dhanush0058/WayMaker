@@ -45,9 +45,8 @@ export const LiveMap: React.FC<LiveMapProps> = ({
       zoomControl: false,
     });
 
-    const tile = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-      subdomains: 'abcd',
+    const tile = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
       maxZoom: 19,
     });
     tile.addTo(map);
@@ -74,14 +73,14 @@ export const LiveMap: React.FC<LiveMapProps> = ({
     if (!mapInstanceRef.current || !tileLayerRef.current) return;
     mapInstanceRef.current.removeLayer(tileLayerRef.current);
 
-    let url = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+    let url = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
     if (mapType === 'satellite') {
       url = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
     } else if (mapType === 'terrain') {
-      url = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
+      url = 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png';
     }
 
-    const newTile = L.tileLayer(url, { maxZoom: 19 });
+    const newTile = L.tileLayer(url, { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' });
     newTile.addTo(mapInstanceRef.current);
     tileLayerRef.current = newTile;
   }, [mapType]);
