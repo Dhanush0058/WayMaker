@@ -1,6 +1,7 @@
 import React from 'react';
 import { Bus, Navigation, AlertTriangle, CheckCircle, Radio, Gauge } from 'lucide-react';
 import { VehicleEvent } from '../../types';
+import { LiveCameraCV } from '../LiveCameraCV';
 
 interface BusesViewProps {
   vehicles: VehicleEvent[];
@@ -92,6 +93,9 @@ export const BusesView: React.FC<BusesViewProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Live YouTube Bus Camera Feed with AI Traffic CV */}
+      <LiveCameraCV compact={false} />
 
       {/* Fleet Telematics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

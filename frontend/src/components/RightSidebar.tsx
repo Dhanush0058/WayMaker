@@ -1,6 +1,7 @@
 import React from 'react';
 import { Ambulance, CheckCircle2, Clock, MapPin, Eye, AlertTriangle } from 'lucide-react';
 import { AmbulanceRoute, Hazard } from '../types';
+import { LiveCameraCV } from './LiveCameraCV';
 
 interface RightSidebarProps {
   ambulance?: AmbulanceRoute;
@@ -121,61 +122,31 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
         </button>
       </div>
 
-      {/* 2. Hazard Information Card */}
-      <div className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-xs">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-bold text-gray-900 text-sm">Hazard Information</h3>
+      {/* 2. Hazard & Real Bus Camera CV Card */}
+      <div className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-xs space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-gray-900 text-sm">Live Bus Camera & CV Analysis</h3>
           <span className="flex items-center gap-1 text-[11px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-200">
             <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse"></span>
-            Live
+            Live CV
           </span>
         </div>
 
-        {/* Thumbnail + Details */}
-        <div className="flex items-start gap-3 mb-3">
-          <div className="w-20 h-16 rounded-xl overflow-hidden border border-gray-200 shrink-0 bg-gray-100 relative">
-            <img
-              src="/pothole.jpg"
-              alt="Detected Road Hazard"
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                // Fallback SVG if image not found
-                (e.target as any).style.display = 'none';
-              }}
-            />
-            <div className="absolute inset-0 border-2 border-red-500 rounded-lg pointer-events-none opacity-80"></div>
-          </div>
+        {/* Embedded Live YouTube Stream with Real-time CV HUD */}
+        <LiveCameraCV compact={true} />
 
-          <div className="flex-1 text-xs">
-            <h4 className="font-black text-red-600 text-sm leading-tight">
-              {activeHazard ? 'Pothole' : 'Pothole'}
+        <div className="flex items-start justify-between text-xs pt-1">
+          <div>
+            <h4 className="font-black text-red-600 text-xs">
+              {activeHazard ? 'Pothole & Traffic Slowdown' : 'Pothole on 5th Avenue'}
             </h4>
-            <p className="text-[11px] text-gray-700 font-medium mt-0.5">
-              {activeHazard?.location_name || '5th Avenue, Banjara Hills'}
-            </p>
-            <p className="text-[10px] text-gray-500 mt-1">
-              Detected by: <span className="font-semibold text-gray-800">Bus 42</span>
-            </p>
-            <p className="text-[10px] text-gray-500">
-              Time: <span className="font-mono text-gray-800">10:21 AM</span>
+            <p className="text-[11px] text-gray-500 font-medium">
+              Live Stream: London Bus Transit • YOLO Traffic Analyzer
             </p>
           </div>
-        </div>
-
-        {/* Severity Badge & View On Map Button */}
-        <div className="flex items-center gap-2 pt-1">
-          <div className="px-2.5 py-1.5 rounded-lg bg-red-50 border border-red-200 text-red-700 font-bold text-xs flex items-center gap-1 shrink-0">
-            <span className="text-red-600 font-black">+</span>
-            <span>High</span>
-          </div>
-
-          <button
-            onClick={onFocusMap}
-            className="flex-1 py-1.5 px-3 rounded-lg border border-[#16A34A] text-[#16A34A] hover:bg-[#EBF8EE] text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
-          >
-            <MapPin className="w-3.5 h-3.5" />
-            <span>View on Map</span>
-          </button>
+          <span className="px-2 py-0.5 rounded bg-red-50 text-red-700 border border-red-200 text-[10px] font-extrabold shrink-0">
+            High Density
+          </span>
         </div>
       </div>
     </aside>

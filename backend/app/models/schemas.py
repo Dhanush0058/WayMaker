@@ -89,6 +89,8 @@ class AmbulanceRoute(BaseModel):
     current_lat: float = 0.0
     current_lng: float = 0.0
     speed_kmh: float = 55.0
+    turn_steps: List[str] = []
+    is_real_osrm: bool = True
 
 class DashboardSummary(BaseModel):
     active_ambulances: int

@@ -85,6 +85,8 @@ export interface AmbulanceRoute {
   current_lat: number;
   current_lng: number;
   speed_kmh: number;
+  turn_steps?: string[];
+  is_real_osrm?: boolean;
 }
 
 export interface DashboardSummary {
