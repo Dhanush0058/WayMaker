@@ -217,6 +217,36 @@ const INITIAL_BUSES: BusRouteInfo[] = [
   },
 ];
 
+// Spark Dataset Image Assets for AI Incident Verification
+export const SPARK_IMAGES = {
+  POTHOLE: [
+    '/spark/Pothholes/SAVE_20261010_120045.jpg',
+    '/spark/Pothholes/SAVE_20261010_120122.jpg',
+    '/spark/Pothholes/SAVE_20261010_120135.jpg',
+  ],
+  GARBAGE: [
+    '/spark/Garbage/SAVE_20261010_120055.jpg',
+    '/spark/Garbage/SAVE_20261010_120115.jpg',
+    '/spark/Garbage/SAVE_20261010_120131.jpg',
+  ],
+  NO_HELMET: [
+    '/spark/Rider without helmet/SAVE_20261010_120050.jpg',
+    '/spark/Rider without helmet/SAVE_20261010_120109(1).jpg',
+    '/spark/Rider without helmet/SAVE_20261010_120109.jpg',
+  ],
+  ROAD_DAMAGE: [
+    '/spark/Water Pipelines/SAVE_20261010_120059.jpg',
+    '/spark/Water Pipelines/SAVE_20261010_120103(1).jpg',
+    '/spark/Water Pipelines/SAVE_20261010_120103.jpg',
+    '/spark/Water Pipelines/SAVE_20261010_120126.jpg',
+  ],
+};
+
+export const getRandomSparkImage = (cat: 'POTHOLE' | 'GARBAGE' | 'NO_HELMET' | 'ROAD_DAMAGE') => {
+  const pool = SPARK_IMAGES[cat] || SPARK_IMAGES.POTHOLE;
+  return pool[Math.floor(Math.random() * pool.length)];
+};
+
 const INITIAL_TICKETS: TicketItem[] = [
   {
     id: 'TK-101',
@@ -232,7 +262,7 @@ const INITIAL_TICKETS: TicketItem[] = [
     severity: 'CRITICAL',
     status: 'IN_PROGRESS',
     slaHoursRemaining: 34.2,
-    imageUrl: 'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&w=600&q=80',
+    imageUrl: '/spark/Pothholes/SAVE_20261010_120045.jpg',
   },
   {
     id: 'TK-102',
@@ -250,7 +280,7 @@ const INITIAL_TICKETS: TicketItem[] = [
     slaHoursRemaining: 42.5,
     vehiclePlate: 'TS 09 EA 4281',
     fineAmount: '₹1,000 E-Challan Generated',
-    imageUrl: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=600&q=80',
+    imageUrl: '/spark/Rider without helmet/SAVE_20261010_120050.jpg',
   },
   {
     id: 'TK-103',
@@ -266,7 +296,7 @@ const INITIAL_TICKETS: TicketItem[] = [
     severity: 'MEDIUM',
     status: 'IN_PROGRESS',
     slaHoursRemaining: 18.0,
-    imageUrl: 'https://images.unsplash.com/photo-1605600659908-0ef719419d41?auto=format&fit=crop&w=600&q=80',
+    imageUrl: '/spark/Garbage/SAVE_20261010_120055.jpg',
   },
   {
     id: 'TK-104',
@@ -282,7 +312,7 @@ const INITIAL_TICKETS: TicketItem[] = [
     severity: 'CRITICAL',
     status: 'ESCALATED',
     slaHoursRemaining: 0.0,
-    imageUrl: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=600&q=80',
+    imageUrl: '/spark/Water Pipelines/SAVE_20261010_120059.jpg',
   },
   {
     id: 'TK-105',
@@ -298,7 +328,7 @@ const INITIAL_TICKETS: TicketItem[] = [
     severity: 'LOW',
     status: 'RESOLVED',
     slaHoursRemaining: 0.0,
-    imageUrl: 'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&w=600&q=80',
+    imageUrl: '/spark/Pothholes/SAVE_20261010_120122.jpg',
   },
 ];
 
@@ -499,12 +529,7 @@ export const SimulationStoreProvider: React.FC<{ children: React.ReactNode }> = 
       severity,
       status: 'PENDING',
       slaHoursRemaining: 48.0,
-      imageUrl:
-        type === 'NO_HELMET'
-          ? 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=600&q=80'
-          : type === 'GARBAGE'
-          ? 'https://images.unsplash.com/photo-1605600659908-0ef719419d41?auto=format&fit=crop&w=600&q=80'
-          : 'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&w=600&q=80',
+      imageUrl: getRandomSparkImage(type),
       vehiclePlate: plate,
       fineAmount: fine,
     };
