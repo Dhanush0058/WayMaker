@@ -1,46 +1,32 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Plus, Minus, Crosshair } from 'lucide-react';
-import { VehicleEvent, Hazard, TrafficSignal, AmbulanceRoute, RoadSegment } from '../types';
+import { Plus, Minus, Layers, AlertTriangle, Eye, ShieldAlert, Bus } from 'lucide-react';
+import { useSimulationStore, BusRouteInfo, MapAlertNotification } from '../context/SimulationStore';
 
 interface LiveMapProps {
-  vehicles: VehicleEvent[];
-  hazards: Hazard[];
-  signals: TrafficSignal[];
-  ambulance?: AmbulanceRoute;
-  segments: RoadSegment[];
-  onSelectHazard?: (hazard: Hazard) => void;
+  onSelectHazard?: (hazardId: string) => void;
 }
 
-export const LiveMap: React.FC<LiveMapProps> = ({
-  vehicles,
-  hazards,
-  signals,
-  ambulance,
-  segments,
-  onSelectHazard,
-}) => {
+export const LiveMap: React.FC<LiveMapProps> = ({ onSelectHazard }) => {
+  const { buses, activeMapAlert } = useSimulationStore();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
-  const [mapType, setMapType] = useState<'map' | 'satellite' | 'terrain'>('map');
+  const [mapType, setMapType] = useState<'map' | 'satellite'>('map');
 
   // Layer groups
   const tileLayerRef = useRef<L.TileLayer | null>(null);
-  const roadLayerGroup = useRef<L.LayerGroup>(new L.LayerGroup());
-  const routeLayerGroup = useRef<L.LayerGroup>(new L.LayerGroup());
-  const signalLayerGroup = useRef<L.LayerGroup>(new L.LayerGroup());
-  const hazardLayerGroup = useRef<L.LayerGroup>(new L.LayerGroup());
-  const vehicleLayerGroup = useRef<L.LayerGroup>(new L.LayerGroup());
-  const poiLayerGroup = useRef<L.LayerGroup>(new L.LayerGroup());
+  const busLayerGroup = useRef<L.LayerGroup>(new L.LayerGroup());
+  const alertLayerGroup = useRef<L.LayerGroup>(new L.LayerGroup());
+  const busMarkersRef = useRef<Record<string, L.Marker>>({});
 
-  // Initialize Map
+  // 1. Initialize Leaflet Map
   useEffect(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return;
 
-    // Centered over Banjara Hills / Somajiguda / Hussain Sagar
+    // Centered over Somajiguda / Punjagutta / Banjara Hills Hyderabad
     const map = L.map(mapContainerRef.current, {
-      center: [17.4210, 78.4480],
+      center: [17.4260, 78.4530],
       zoom: 14,
       zoomControl: false,
     });
@@ -52,14 +38,8 @@ export const LiveMap: React.FC<LiveMapProps> = ({
     tile.addTo(map);
     tileLayerRef.current = tile;
 
-    // Attach layers
-    roadLayerGroup.current.addTo(map);
-    routeLayerGroup.current.addTo(map);
-    poiLayerGroup.current.addTo(map);
-    signalLayerGroup.current.addTo(map);
-    hazardLayerGroup.current.addTo(map);
-    vehicleLayerGroup.current.addTo(map);
-
+    busLayerGroup.current.addTo(map);
+    alertLayerGroup.current.addTo(map);
     mapInstanceRef.current = map;
 
     return () => {
@@ -68,343 +48,213 @@ export const LiveMap: React.FC<LiveMapProps> = ({
     };
   }, []);
 
-  // Handle tile switch
+  // 2. Handle Map Type Toggle
   useEffect(() => {
     if (!mapInstanceRef.current || !tileLayerRef.current) return;
     mapInstanceRef.current.removeLayer(tileLayerRef.current);
 
-    let url = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-    if (mapType === 'satellite') {
-      url = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-    } else if (mapType === 'terrain') {
-      url = 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png';
-    }
+    const url =
+      mapType === 'satellite'
+        ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+        : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
     const newTile = L.tileLayer(url, { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' });
     newTile.addTo(mapInstanceRef.current);
     tileLayerRef.current = newTile;
   }, [mapType]);
 
-  // Update Hospital Pin & Destination Marker
+  // 3. Update 6 Moving Indian Transit Buses on the Map
   useEffect(() => {
-    poiLayerGroup.current.clearLayers();
+    if (!mapInstanceRef.current) return;
 
-    // City General Hospital
-    const hospIcon = L.divIcon({
-      className: 'custom-hosp-icon',
-      html: `
-        <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
-          <div style="background: white; border-radius: 8px; padding: 4px 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; items-center; gap: 6px; border: 1px solid #E5E7EB; white-space: nowrap;">
-            <div style="background: #16A34A; color: white; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px;">+</div>
-            <div>
-              <div style="font-weight: 800; font-size: 11px; color: #111827;">City General Hospital</div>
-              <div style="font-size: 9px; font-weight: 700; color: #16A34A;">ETA: 8 min</div>
-            </div>
-          </div>
-          <div style="width: 12px; height: 12px; background: #16A34A; border: 2px solid white; border-radius: 50%; margin-top: -3px; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>
-        </div>
-      `,
-      iconSize: [150, 48],
-      iconAnchor: [75, 42],
-    });
+    buses.forEach((bus) => {
+      const isStopped = bus.status === 'TRANSIT_STOP';
+      const isAlert = bus.status === 'HAZARD_ALERT';
 
-    const hospMarker = L.marker([17.4370, 78.4720], { icon: hospIcon, zIndexOffset: 900 });
-    poiLayerGroup.current.addLayer(hospMarker);
-  }, []);
-
-  // Update Routes (Active Green with directional flow & Yellow/Orange bypassed section)
-  useEffect(() => {
-    routeLayerGroup.current.clearLayers();
-    if (!ambulance) return;
-
-    // 1. Bypassed / Avoided segment in Orange/Yellow (5th Ave trunk)
-    const bypassedSegment = [
-      [17.4100, 78.4320], // Banjara Rd 1
-      [17.4150, 78.4420], // 5th Ave West
-      [17.4180, 78.4490], // 5th Ave Hazard
-      [17.4210, 78.4550], // 5th Ave East
-    ];
-
-    const bypassLine = L.polyline(bypassedSegment as [number, number][], {
-      color: '#F59E0B',
-      weight: 6,
-      opacity: 0.85,
-      dashArray: '6, 6',
-      lineCap: 'round',
-    });
-    routeLayerGroup.current.addLayer(bypassLine);
-
-    // 2. Active Ambulance Route in vivid green
-    if (ambulance.current_route_coords && ambulance.current_route_coords.length > 0) {
-      // High-visibility emerald green polyline
-      const activeLine = L.polyline(ambulance.current_route_coords, {
-        color: '#16A34A',
-        weight: 7,
-        opacity: 0.95,
-        lineCap: 'round',
-        lineJoin: 'round',
-      });
-      routeLayerGroup.current.addLayer(activeLine);
-
-      // Inner glowing core
-      const innerLine = L.polyline(ambulance.current_route_coords, {
-        color: '#4ADE80',
-        weight: 3,
-        opacity: 0.9,
-      });
-      routeLayerGroup.current.addLayer(innerLine);
-    }
-  }, [ambulance]);
-
-  // Update Hazard Marker with pulsating circular ripple (Pothole / Rupture)
-  useEffect(() => {
-    hazardLayerGroup.current.clearLayers();
-
-    const hazardLat = 17.4168;
-    const hazardLng = 78.4485;
-
-    // Pulsing circle around hazard
-    const pulseCircle = L.circle([hazardLat, hazardLng], {
-      radius: 120,
-      color: '#DC2626',
-      fillColor: '#EF4444',
-      fillOpacity: 0.25,
-      weight: 1.5,
-    });
-    hazardLayerGroup.current.addLayer(pulseCircle);
-
-    // Inner pulsing ring
-    const innerCircle = L.circle([hazardLat, hazardLng], {
-      radius: 60,
-      color: '#DC2626',
-      fillColor: '#DC2626',
-      fillOpacity: 0.45,
-      weight: 2,
-    });
-    hazardLayerGroup.current.addLayer(innerCircle);
-
-    // Pin with floating label "Pothole"
-    const hazardIcon = L.divIcon({
-      className: 'custom-hazard-label',
-      html: `
-        <div style="position: relative; display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -50%);">
-          <div style="background: white; border-radius: 6px; padding: 2px 6px; border: 1.5px solid #DC2626; box-shadow: 0 2px 6px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 4px; white-space: nowrap;">
-            <span style="font-size: 11px;">⚠️</span>
-            <span style="color: #DC2626; font-weight: 800; font-size: 10px;">Pothole</span>
-          </div>
-          <div style="width: 22px; height: 22px; border-radius: 50%; background: #DC2626; border: 2.5px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(220,38,38,0.5); margin-top: -2px;">
-            <span style="color: white; font-weight: 900; font-size: 11px;">!</span>
-          </div>
-        </div>
-      `,
-      iconSize: [60, 40],
-      iconAnchor: [0, 0],
-    });
-
-    const hazardMarker = L.marker([hazardLat, hazardLng], { icon: hazardIcon, zIndexOffset: 950 });
-    hazardMarker.on('click', () => {
-      if (hazards.length > 0 && onSelectHazard) onSelectHazard(hazards[0]);
-    });
-    hazardLayerGroup.current.addLayer(hazardMarker);
-  }, [hazards, onSelectHazard]);
-
-  // Update Synced Traffic Lights along the route
-  useEffect(() => {
-    signalLayerGroup.current.clearLayers();
-
-    // Coordinates along Somajiguda to Begumpet corridor
-    const syncedLightPoints: [number, number][] = [
-      [17.4120, 78.4350],
-      [17.4200, 78.4390],
-      [17.4240, 78.4440],
-      [17.4260, 78.4520],
-      [17.4280, 78.4610],
-      [17.4320, 78.4660],
-    ];
-
-    syncedLightPoints.forEach((pt) => {
-      const lightIcon = L.divIcon({
-        className: 'custom-traffic-light-point',
+      const customIcon = L.divIcon({
+        className: 'bus-marker-container',
         html: `
-          <div style="width: 14px; height: 14px; border-radius: 50%; background: #16A34A; border: 2.5px solid white; box-shadow: 0 0 10px #22C55E; display: flex; align-items: center; justify-content: center;">
-            <div style="width: 4px; height: 4px; border-radius: 50%; background: white;"></div>
+          <div style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            transition: all 0.3s ease-out;
+          ">
+            <div style="
+              background: ${isAlert ? '#DC2626' : isStopped ? '#D97706' : '#16A34A'};
+              color: white;
+              padding: 3px 8px;
+              border-radius: 6px;
+              font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+              font-size: 11px;
+              font-weight: 800;
+              box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+              border: 2px solid white;
+              display: flex;
+              align-items: center;
+              gap: 4px;
+              white-space: nowrap;
+            ">
+              <span style="font-size: 10px;">🚌</span>
+              <span>${bus.id}</span>
+              <span style="font-size: 9px; opacity: 0.9; background: rgba(0,0,0,0.2); padding: 1px 4px; border-radius: 3px;">
+                ${bus.speedKmh} km/h
+              </span>
+            </div>
+            <div style="
+              width: 8px;
+              height: 8px;
+              background: ${isAlert ? '#DC2626' : '#16A34A'};
+              border: 2px solid white;
+              border-radius: 50%;
+              margin-top: -2px;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            "></div>
           </div>
         `,
-        iconSize: [14, 14],
-        iconAnchor: [7, 7],
+        iconSize: [80, 40],
+        iconAnchor: [40, 20],
       });
 
-      const marker = L.marker(pt, { icon: lightIcon, zIndexOffset: 850 });
-      signalLayerGroup.current.addLayer(marker);
+      if (busMarkersRef.current[bus.id]) {
+        // Smoothly update position
+        busMarkersRef.current[bus.id].setLatLng([bus.lat, bus.lng]);
+        busMarkersRef.current[bus.id].setIcon(customIcon);
+      } else {
+        const marker = L.marker([bus.lat, bus.lng], { icon: customIcon });
+        marker.addTo(busLayerGroup.current);
+        busMarkersRef.current[bus.id] = marker;
+      }
     });
-  }, [signals]);
+  }, [buses]);
 
-  // Update Vehicles: Ambulance A-17 with floating badge & Bus 42, Bus 18
+  // 4. Render Active 2.5s Auto-Fading Alert Popup on Map
   useEffect(() => {
-    vehicleLayerGroup.current.clearLayers();
+    alertLayerGroup.current.clearLayers();
+    if (!activeMapAlert || !mapInstanceRef.current) return;
 
-    // 1. Ambulance A-17
-    const ambLat = ambulance?.current_lat || 17.4080;
-    const ambLng = ambulance?.current_lng || 78.4230;
-
-    const ambIcon = L.divIcon({
-      className: 'custom-amb-floating-badge',
+    const alertIcon = L.divIcon({
+      className: 'map-alert-popup-container',
       html: `
-        <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
-          <div style="background: white; border-radius: 8px; padding: 4px 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.18); border: 1px solid #E5E7EB; white-space: nowrap; margin-bottom: 2px;">
-            <div style="font-weight: 800; font-size: 11px; color: #111827;">Ambulance A-17</div>
-            <div style="display: flex; gap: 6px; font-size: 9px; font-weight: 700;">
-              <span style="color: #16A34A;">ETA: 8 min</span>
-              <span style="color: #6B7280;">•</span>
-              <span style="color: #4B5563;">Speed: 52 km/h</span>
+        <div style="
+          transform: translate(-50%, -100%);
+          animation: bounce 0.4s ease-out;
+        ">
+          <div style="
+            background: #111827;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            border: 2px solid ${activeMapAlert.type === 'NO_HELMET' ? '#3B82F6' : '#DC2626'};
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+          ">
+            <div style="
+              width: 22px;
+              height: 22px;
+              border-radius: 50%;
+              background: ${activeMapAlert.type === 'NO_HELMET' ? '#3B82F6' : '#DC2626'};
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 11px;
+              font-weight: bold;
+            ">
+              ${activeMapAlert.type === 'NO_HELMET' ? '🛵' : '⚠️'}
+            </div>
+            <div>
+              <div style="font-size: 11px; font-weight: 800; color: #F9FAFB;">
+                ${activeMapAlert.title}
+              </div>
+              <div style="font-size: 10px; color: #9CA3AF;">
+                Reported by Bus ${activeMapAlert.busNumber} • ${activeMapAlert.location}
+              </div>
             </div>
           </div>
-          <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; background: white; border: 2.5px solid #DC2626; box-shadow: 0 3px 8px rgba(0,0,0,0.25);">
-            <span style="font-size: 18px;">🚑</span>
-          </div>
+          <div style="
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 6px solid #111827;
+            margin: 0 auto;
+          "></div>
         </div>
       `,
-      iconSize: [140, 68],
-      iconAnchor: [70, 58],
+      iconSize: [240, 60],
+      iconAnchor: [120, 50],
     });
 
-    const ambMarker = L.marker([ambLat, ambLng], { icon: ambIcon, zIndexOffset: 1000 });
-    vehicleLayerGroup.current.addLayer(ambMarker);
-
-    // 2. Bus 42 (near 5th Ave)
-    const bus42Icon = L.divIcon({
-      className: 'custom-bus42-badge',
-      html: `
-        <div style="background: white; border-radius: 6px; padding: 3px 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 4px; border: 1px solid #D1D5DB; white-space: nowrap;">
-          <div style="background: #374151; color: white; border-radius: 4px; padding: 1px 3px; font-size: 9px;">🚌</div>
-          <span style="font-weight: 800; font-size: 10px; color: #111827;">Bus 42</span>
-        </div>
-      `,
-      iconSize: [80, 26],
-      iconAnchor: [40, 13],
+    const alertMarker = L.marker([activeMapAlert.lat, activeMapAlert.lng], {
+      icon: alertIcon,
+      zIndexOffset: 1000,
     });
-    const bus42Marker = L.marker([17.4190, 78.4470], { icon: bus42Icon, zIndexOffset: 800 });
-    vehicleLayerGroup.current.addLayer(bus42Marker);
 
-    // 3. Bus 18 (near Tolichowki)
-    const bus18Icon = L.divIcon({
-      className: 'custom-bus18-badge',
-      html: `
-        <div style="background: white; border-radius: 6px; padding: 3px 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 4px; border: 1px solid #D1D5DB; white-space: nowrap;">
-          <div style="background: #374151; color: white; border-radius: 4px; padding: 1px 3px; font-size: 9px;">🚌</div>
-          <span style="font-weight: 800; font-size: 10px; color: #111827;">Bus 18</span>
-        </div>
-      `,
-      iconSize: [80, 26],
-      iconAnchor: [40, 13],
-    });
-    const bus18Marker = L.marker([17.4070, 78.4410], { icon: bus18Icon, zIndexOffset: 800 });
-    vehicleLayerGroup.current.addLayer(bus18Marker);
-  }, [ambulance, vehicles]);
-
-  // Zoom handlers
-  const handleZoomIn = () => mapInstanceRef.current?.zoomIn();
-  const handleZoomOut = () => mapInstanceRef.current?.zoomOut();
-  const handleRecenter = () => mapInstanceRef.current?.setView([17.4210, 78.4480], 14);
+    alertMarker.addTo(alertLayerGroup.current);
+  }, [activeMapAlert]);
 
   return (
-    <div className="relative w-full h-[580px] rounded-2xl overflow-hidden border border-gray-200/80 shadow-xs bg-[#F4F6F8]">
-      {/* Map Leaflet Container */}
+    <div className="relative w-full h-full min-h-[500px] select-none">
+      {/* Leaflet Map Div */}
       <div ref={mapContainerRef} className="w-full h-full z-0" />
 
-      {/* Top Left: Map / Satellite / Terrain Buttons */}
-      <div className="absolute top-4 left-4 z-[500] flex items-center bg-white rounded-xl p-1 shadow-md border border-gray-200/80 text-xs font-bold">
-        <button
-          onClick={() => setMapType('map')}
-          className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
-            mapType === 'map'
-              ? 'bg-[#1E293B] text-white shadow-xs'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          Map
-        </button>
-        <button
-          onClick={() => setMapType('satellite')}
-          className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
-            mapType === 'satellite'
-              ? 'bg-[#1E293B] text-white shadow-xs'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          Satellite
-        </button>
-        <button
-          onClick={() => setMapType('terrain')}
-          className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
-            mapType === 'terrain'
-              ? 'bg-[#1E293B] text-white shadow-xs'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          Terrain
-        </button>
-      </div>
-
-      {/* Top Right: Zoom In, Out, Recenter Buttons */}
-      <div className="absolute top-4 right-4 z-[500] flex flex-col gap-1.5">
-        <div className="bg-white rounded-xl shadow-md border border-gray-200/80 overflow-hidden flex flex-col">
+      {/* Floating Map Controls (Top-Right) */}
+      <div className="absolute top-4 right-4 z-400 flex flex-col gap-2">
+        {/* Layer Switcher */}
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-1 flex gap-1 text-xs font-semibold">
           <button
-            onClick={handleZoomIn}
-            className="p-2 hover:bg-gray-50 text-gray-700 transition cursor-pointer border-b border-gray-100 flex items-center justify-center"
+            onClick={() => setMapType('map')}
+            className={`px-2.5 py-1 rounded transition cursor-pointer ${
+              mapType === 'map' ? 'bg-[#16A34A] text-white' : 'text-gray-600 hover:bg-gray-100'
+            }`}
+          >
+            Street Map
+          </button>
+          <button
+            onClick={() => setMapType('satellite')}
+            className={`px-2.5 py-1 rounded transition cursor-pointer ${
+              mapType === 'satellite' ? 'bg-[#16A34A] text-white' : 'text-gray-600 hover:bg-gray-100'
+            }`}
+          >
+            Satellite
+          </button>
+        </div>
+
+        {/* Zoom Controls */}
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 flex flex-col overflow-hidden self-end">
+          <button
+            onClick={() => mapInstanceRef.current?.zoomIn()}
+            className="p-2 text-gray-700 hover:bg-gray-100 transition border-b border-gray-100 cursor-pointer"
             title="Zoom In"
           >
             <Plus className="w-4 h-4" />
           </button>
           <button
-            onClick={handleZoomOut}
-            className="p-2 hover:bg-gray-50 text-gray-700 transition cursor-pointer flex items-center justify-center"
+            onClick={() => mapInstanceRef.current?.zoomOut()}
+            className="p-2 text-gray-700 hover:bg-gray-100 transition cursor-pointer"
             title="Zoom Out"
           >
             <Minus className="w-4 h-4" />
           </button>
         </div>
-
-        <button
-          onClick={handleRecenter}
-          className="p-2 bg-white rounded-xl shadow-md border border-gray-200/80 hover:bg-gray-50 text-gray-700 transition cursor-pointer flex items-center justify-center"
-          title="Recenter Map"
-        >
-          <Crosshair className="w-4 h-4" />
-        </button>
       </div>
 
-      {/* Bottom Map Legend Bar */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[500] bg-white/95 backdrop-blur-md px-5 py-2.5 rounded-2xl shadow-lg border border-gray-200/90 flex items-center gap-6 text-xs font-bold text-gray-700">
+      {/* Floating Bottom Legend Bar */}
+      <div className="absolute bottom-4 left-4 z-400 bg-white/95 backdrop-blur-xs rounded-xl shadow-md border border-gray-200 px-4 py-2 flex items-center gap-4 text-xs font-medium text-gray-700">
         <div className="flex items-center gap-2">
-          <span className="w-4 h-1 bg-[#16A34A] rounded"></span>
-          <span>Ambulance Route</span>
+          <span className="w-3 h-3 rounded-full bg-[#16A34A] flex items-center justify-center text-white text-[8px]">
+            ●
+          </span>
+          <span>6 Active Transit Buses (Live GPS)</span>
         </div>
-
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-[10px]">
-            ⚠️
-          </div>
-          <span>Hazard (Pothole)</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-full bg-[#16A34A] border-2 border-white shadow-xs"></span>
-          <span>Synced Traffic Light</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-gray-700 text-white flex items-center justify-center text-[10px]">
-            🚌
-          </div>
-          <span>Bus (Live)</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded-full bg-[#16A34A] text-white flex items-center justify-center text-[10px] font-black">
-            +
-          </div>
-          <span>Hospital</span>
+        <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
+          <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse"></span>
+          <span>AI Incident Detection Active</span>
         </div>
       </div>
     </div>

@@ -10,14 +10,16 @@ import { TicketsView } from './components/views/TicketsView';
 import { BusesView } from './components/views/BusesView';
 import { AnalyticsView } from './components/views/AnalyticsView';
 
+// Unified Simulation Store Provider
+import { SimulationStoreProvider } from './context/SimulationStore';
 import { SnapshotData } from './types';
 
 const API_BASE = 'http://127.0.0.1:8000';
 const WS_BASE = 'ws://127.0.0.1:8000/ws/events';
 
-export const App: React.FC = () => {
+export const AppContent: React.FC = () => {
   const [data, setData] = useState<SnapshotData | null>(null);
-  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [isConnected, setIsConnected] = useState<boolean>(true);
   const [isMetricsOpen, setIsMetricsOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('live-map');
   const wsRef = useRef<WebSocket | null>(null);
@@ -30,15 +32,14 @@ export const App: React.FC = () => {
         const json = await res.json();
         setData(json);
       }
-    } catch (err) {
-      // Backend may be starting
+    } catch {
+      // Backend may be offline/standalone
     }
   };
 
   useEffect(() => {
     fetchSnapshot();
 
-    // WebSocket connection
     let ws: WebSocket;
     let reconnectTimeout: any;
 
@@ -47,36 +48,33 @@ export const App: React.FC = () => {
         ws = new WebSocket(WS_BASE);
         wsRef.current = ws;
 
-        ws.onopen = () => {
-          setIsConnected(true);
-        };
-
+        ws.onopen = () => setIsConnected(true);
         ws.onmessage = (event) => {
           try {
             const parsed = JSON.parse(event.data);
             setData(parsed);
           } catch (e) {
-            console.error('WS Parse error:', e);
+            console.error('WS error:', e);
           }
         };
 
         ws.onclose = () => {
           setIsConnected(false);
-          reconnectTimeout = setTimeout(connectWS, 2000);
+          reconnectTimeout = setTimeout(connectWS, 3000);
         };
 
         ws.onerror = () => {
           setIsConnected(false);
           ws.close();
         };
-      } catch (err) {
+      } catch {
         setIsConnected(false);
-        reconnectTimeout = setTimeout(connectWS, 2000);
+        reconnectTimeout = setTimeout(connectWS, 3000);
       }
     };
 
     connectWS();
-    const interval = setInterval(fetchSnapshot, 2000);
+    const interval = setInterval(fetchSnapshot, 3000);
 
     return () => {
       if (wsRef.current) wsRef.current.close();
@@ -85,7 +83,6 @@ export const App: React.FC = () => {
     };
   }, []);
 
-  // API Action triggers
   const handleApiAction = async (endpoint: string, method: string = 'POST', body?: any) => {
     try {
       await fetch(`${API_BASE}${endpoint}`, {
@@ -118,11 +115,10 @@ export const App: React.FC = () => {
 
       {/* Main Container: Full Width & Height */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left: Streamlined Sidebar with dynamic live events */}
+        {/* Left: 4-Tab Navigation */}
         <Sidebar
           activeTab={activeTab}
           setActiveTab={setActiveTab}
-          events={data?.events ?? []}
         />
 
         {/* Center: Dynamic View Area (Full screen width) */}
@@ -131,7 +127,7 @@ export const App: React.FC = () => {
             <div className="flex flex-col h-[calc(100vh-105px)] space-y-3">
               {/* Clean Scenario Control Bar */}
               <ScenarioBar
-                simulationState={data?.summary.simulation_state ?? 'IDLE'}
+                simulationState={data?.summary.simulation_state ?? 'RUNNING'}
                 onStart={handleStart}
                 onPause={handlePause}
                 onReset={handleReset}
@@ -141,38 +137,18 @@ export const App: React.FC = () => {
                 onTriggerSecondaryAccident={handleTriggerSecondaryAccident}
               />
 
-              {/* Full-Width Live GIS Map */}
+              {/* Full-Width Live GIS Map with 6 Moving Indian Transit Buses */}
               <div className="flex-1 min-h-0 rounded-2xl overflow-hidden border border-gray-200 shadow-xs">
-                <LiveMap
-                  vehicles={data?.vehicles ?? []}
-                  hazards={data?.hazards ?? []}
-                  signals={data?.signals ?? []}
-                  ambulance={data?.ambulance}
-                  segments={data?.segments ?? []}
-                  onSelectHazard={() => setActiveTab('tickets')}
-                />
+                <LiveMap onSelectHazard={() => setActiveTab('tickets')} />
               </div>
             </div>
           )}
 
-          {activeTab === 'tickets' && (
-            <TicketsView
-              hazards={data?.hazards ?? []}
-              onTriggerWaterBreak={handleTriggerWaterBreak}
-            />
-          )}
+          {activeTab === 'tickets' && <TicketsView />}
 
-          {activeTab === 'buses' && (
-            <BusesView
-              vehicles={data?.vehicles ?? []}
-              onTriggerFalseAlarm={handleTriggerFalseAlarm}
-              onTriggerWaterBreak={handleTriggerWaterBreak}
-            />
-          )}
+          {activeTab === 'buses' && <BusesView />}
 
-          {activeTab === 'analytics' && (
-            <AnalyticsView metrics={data?.metrics} />
-          )}
+          {activeTab === 'analytics' && <AnalyticsView />}
         </main>
       </div>
 
@@ -183,6 +159,14 @@ export const App: React.FC = () => {
         metrics={data?.metrics}
       />
     </div>
+  );
+};
+
+export const App: React.FC = () => {
+  return (
+    <SimulationStoreProvider>
+      <AppContent />
+    </SimulationStoreProvider>
   );
 };
 

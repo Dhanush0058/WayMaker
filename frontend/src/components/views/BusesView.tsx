@@ -11,116 +11,20 @@ import {
   CheckCircle,
   AlertTriangle,
   X,
-  Maximize2,
+  Phone,
 } from 'lucide-react';
-import { VehicleEvent } from '../../types';
+import { useSimulationStore, BusRouteInfo } from '../../context/SimulationStore';
 import { LiveCameraCV } from '../LiveCameraCV';
 
-interface BusesViewProps {
-  vehicles?: VehicleEvent[];
-  onTriggerFalseAlarm?: () => void;
-  onTriggerWaterBreak?: () => void;
-}
-
-interface BusFleetItem {
-  id: string;
-  routeNumber: string;
-  routeName: string;
-  driverName: string;
-  speedKmh: number;
-  status: 'ACTIVE_NORMAL' | 'TRANSIT_STOP' | 'HAZARD_DETECTED' | 'DELAYED';
-  location: string;
-  lastUpdated: string;
-  occupancy: string;
-  hasLiveStream: boolean;
-}
-
-export const BusesView: React.FC<BusesViewProps> = ({
-  vehicles = [],
-  onTriggerFalseAlarm,
-  onTriggerWaterBreak,
-}) => {
+export const BusesView: React.FC = () => {
+  const { buses } = useSimulationStore();
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [activeStreamBus, setActiveStreamBus] = useState<BusFleetItem | null>(null);
+  const [activeStreamBus, setActiveStreamBus] = useState<BusRouteInfo | null>(null);
 
-  const fleetList: BusFleetItem[] = [
-    {
-      id: 'BUS-42',
-      routeNumber: 'Route 42-EX',
-      routeName: 'Somajiguda & 5th Avenue Express',
-      driverName: 'K. Raghavan',
-      speedKmh: 44,
-      status: 'HAZARD_DETECTED',
-      location: '5th Avenue • Corridor Sector 3',
-      lastUpdated: '10s ago',
-      occupancy: '38 / 52 Seats',
-      hasLiveStream: true,
-    },
-    {
-      id: 'BUS-18',
-      routeNumber: 'Route 18-C',
-      routeName: 'Banjara Hills & City Center Loop',
-      driverName: 'M. Suresh',
-      speedKmh: 28,
-      status: 'TRANSIT_STOP',
-      location: 'Banjara Hills Rd No. 12',
-      lastUpdated: 'Just now',
-      occupancy: '44 / 52 Seats',
-      hasLiveStream: true,
-    },
-    {
-      id: 'BUS-07',
-      routeNumber: 'Route 07-N',
-      routeName: 'Greenlands Flyover & Secunderabad',
-      driverName: 'P. Venkat',
-      speedKmh: 52,
-      status: 'ACTIVE_NORMAL',
-      location: 'Greenlands Flyover North',
-      lastUpdated: '25s ago',
-      occupancy: '22 / 52 Seats',
-      hasLiveStream: true,
-    },
-    {
-      id: 'BUS-29',
-      routeNumber: 'Route 29-A',
-      routeName: 'MG Road Trunk Line',
-      driverName: 'T. Narsimha',
-      speedKmh: 36,
-      status: 'ACTIVE_NORMAL',
-      location: 'MG Road Central Terminal',
-      lastUpdated: '1m ago',
-      occupancy: '48 / 52 Seats',
-      hasLiveStream: true,
-    },
-    {
-      id: 'BUS-14',
-      routeNumber: 'Route 14-S',
-      routeName: 'Hussain Sagar Lakefront Line',
-      driverName: 'G. Srinivas',
-      speedKmh: 30,
-      status: 'ACTIVE_NORMAL',
-      location: 'Tank Bund Roadway',
-      lastUpdated: '40s ago',
-      occupancy: '19 / 52 Seats',
-      hasLiveStream: true,
-    },
-    {
-      id: 'BUS-33',
-      routeNumber: 'Route 33-M',
-      routeName: 'Medical District Shuttle',
-      driverName: 'D. Naidu',
-      speedKmh: 41,
-      status: 'ACTIVE_NORMAL',
-      location: 'Hospital Corridor Junction',
-      lastUpdated: '15s ago',
-      occupancy: '30 / 52 Seats',
-      hasLiveStream: true,
-    },
-  ];
-
-  const filteredFleet = fleetList.filter(
+  const filteredFleet = buses.filter(
     (b) =>
       b.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      b.busCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
       b.routeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       b.driverName.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -132,7 +36,7 @@ export const BusesView: React.FC<BusesViewProps> = ({
         <div>
           <h2 className="text-xl font-bold text-gray-900 tracking-tight">Public Transit Fleet & Telematics</h2>
           <p className="text-xs text-gray-500 font-normal mt-0.5">
-            Real-time GPS telematics, speed monitoring, and AI onboard camera live streams.
+            Real-time GPS telematics, speed tracking, and onboard AI camera feeds across urban transit corridors.
           </p>
         </div>
 
@@ -149,11 +53,11 @@ export const BusesView: React.FC<BusesViewProps> = ({
         </div>
       </div>
 
-      {/* Fleet Cards Grid */}
+      {/* Fleet Cards Grid (Indian Transit Routes in 100% Sync with Live Map) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredFleet.map((bus) => {
-          const isHazard = bus.status === 'HAZARD_DETECTED';
-          const isTransitStop = bus.status === 'TRANSIT_STOP';
+          const isStopped = bus.status === 'TRANSIT_STOP';
+          const isAlert = bus.status === 'HAZARD_ALERT';
 
           return (
             <div
@@ -163,52 +67,64 @@ export const BusesView: React.FC<BusesViewProps> = ({
               {/* Card Header */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-[#16A34A] flex items-center justify-center font-bold">
-                      <Bus className="w-4 h-4" />
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-lg bg-emerald-50 text-[#16A34A] flex items-center justify-center font-bold">
+                      <Bus className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-sm text-gray-900 leading-tight">{bus.id}</h3>
-                      <span className="text-[11px] text-gray-500 font-medium">{bus.routeNumber}</span>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-extrabold text-base text-gray-900 leading-tight">Bus {bus.id}</h3>
+                        <span className="font-mono text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.2 rounded border border-gray-200">
+                          {bus.busCode}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-gray-500 font-medium truncate block max-w-[170px]">
+                        {bus.routeName}
+                      </span>
                     </div>
                   </div>
 
                   <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${
-                    isHazard
+                    isAlert
                       ? 'bg-red-50 text-red-600 border-red-200'
-                      : isTransitStop
+                      : isStopped
                       ? 'bg-amber-50 text-amber-700 border-amber-200'
                       : 'bg-emerald-50 text-[#16A34A] border-emerald-200'
                   }`}>
-                    {bus.status.replace('_', ' ')}
+                    {isAlert ? 'HAZARD ALERT' : isStopped ? 'TRANSIT STOP' : 'IN TRANSIT'}
                   </span>
                 </div>
-
-                <p className="text-xs font-semibold text-gray-800">{bus.routeName}</p>
               </div>
 
-              {/* Telematics Metrics */}
-              <div className="bg-gray-50 rounded-lg p-3 border border-gray-100 text-xs space-y-1.5">
+              {/* Dynamic Telematics Readout (Synced with Live Map) */}
+              <div className="bg-gray-50 rounded-lg p-3 border border-gray-100 text-xs space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-500 flex items-center gap-1.5">
+                  <span className="text-gray-500 flex items-center gap-1.5 font-medium">
                     <Gauge className="w-3.5 h-3.5 text-gray-400" />
-                    Speed:
+                    Live Speed:
                   </span>
-                  <strong className="font-mono font-bold text-gray-900">{bus.speedKmh} km/h</strong>
+                  <strong className="font-mono font-bold text-gray-900 text-sm">{bus.speedKmh} km/h</strong>
                 </div>
+
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-500 flex items-center gap-1.5">
+                  <span className="text-gray-500 flex items-center gap-1.5 font-medium">
                     <MapPin className="w-3.5 h-3.5 text-gray-400" />
-                    Location:
+                    Current Corridor:
                   </span>
-                  <span className="text-gray-800 font-medium truncate max-w-[150px]">{bus.location}</span>
+                  <span className="text-gray-800 font-medium truncate max-w-[150px]">{bus.currentLocationName}</span>
                 </div>
+
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-500 flex items-center gap-1.5">
+                  <span className="text-gray-500 flex items-center gap-1.5 font-medium">
                     <User className="w-3.5 h-3.5 text-gray-400" />
                     Driver:
                   </span>
                   <span className="text-gray-800 font-medium">{bus.driverName}</span>
+                </div>
+
+                <div className="flex items-center justify-between pt-1 border-t border-gray-200/60">
+                  <span className="text-gray-400 text-[11px]">Passenger Capacity:</span>
+                  <span className="text-gray-600 text-[11px] font-semibold">{bus.occupancy}</span>
                 </div>
               </div>
 
@@ -218,7 +134,7 @@ export const BusesView: React.FC<BusesViewProps> = ({
                 className="w-full py-2.5 rounded-lg bg-gray-900 hover:bg-black text-white text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-2"
               >
                 <Video className="w-4 h-4 text-emerald-400" />
-                <span>Watch Live AI Camera</span>
+                <span>Watch Live Onboard AI Camera</span>
               </button>
             </div>
           );
@@ -243,10 +159,10 @@ export const BusesView: React.FC<BusesViewProps> = ({
                 </div>
                 <div>
                   <h3 className="text-sm font-bold">
-                    {activeStreamBus.id} — Onboard AI Vision Stream ({activeStreamBus.routeName})
+                    Bus {activeStreamBus.id} ({activeStreamBus.busCode}) — Live AI Vision Stream
                   </h3>
                   <p className="text-[11px] text-gray-400 font-mono">
-                    Driver: {activeStreamBus.driverName} • Speed: {activeStreamBus.speedKmh} km/h • {activeStreamBus.location}
+                    Driver: {activeStreamBus.driverName} • Speed: {activeStreamBus.speedKmh} km/h • {activeStreamBus.currentLocationName}
                   </p>
                 </div>
               </div>

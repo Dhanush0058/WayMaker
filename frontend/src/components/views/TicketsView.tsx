@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Search,
   Filter,
@@ -15,152 +15,21 @@ import {
   Check,
   RefreshCw,
   X,
+  FileText,
+  Phone,
+  Building,
+  AlertCircle,
 } from 'lucide-react';
-import { Hazard } from '../../types';
+import { useSimulationStore, TicketItem } from '../../context/SimulationStore';
 
-interface Ticket {
-  id: string;
-  category: 'POTHOLE' | 'GARBAGE' | 'ROAD_DAMAGE' | 'NO_HELMET_VIOLATION';
-  title: string;
-  location: string;
-  coordinates: string;
-  detectedBy: string;
-  timestamp: string;
-  assignedOfficer: string;
-  department: string;
-  severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
-  status: 'PENDING' | 'IN_PROGRESS' | 'RESOLVED' | 'ESCALATED';
-  slaHoursRemaining: number; // 48h initial SLA
-  imageUrl: string;
-  vehiclePlate?: string;
-  fineAmount?: string;
-}
-
-interface TicketsViewProps {
-  hazards?: Hazard[];
-  onTriggerWaterBreak?: () => void;
-}
-
-export const TicketsView: React.FC<TicketsViewProps> = ({
-  hazards = [],
-  onTriggerWaterBreak,
-}) => {
+export const TicketsView: React.FC = () => {
+  const { tickets, updateTicketStatus, triggerManualIncident } = useSimulationStore();
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
-
-  // Initial tickets list
-  const [tickets, setTickets] = useState<Ticket[]>([
-    {
-      id: 'TK-101',
-      category: 'POTHOLE',
-      title: 'Severe Pothole & Road Rupture',
-      location: '5th Avenue • Near Somajiguda Junction',
-      coordinates: '17.4241° N, 78.4498° E',
-      detectedBy: 'Bus #42 Telematics & AI Camera',
-      timestamp: 'Today at 08:14 AM',
-      assignedOfficer: 'Eng. R. K. Varma',
-      department: 'GHMC Road Maintenance Ward 14',
-      severity: 'CRITICAL',
-      status: 'IN_PROGRESS',
-      slaHoursRemaining: 34.5,
-      imageUrl: 'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&w=600&q=80',
-    },
-    {
-      id: 'TK-102',
-      category: 'NO_HELMET_VIOLATION',
-      title: 'Rider Without Helmet Violation',
-      location: 'Banjara Hills Road No. 12',
-      coordinates: '17.4182° N, 78.4350° E',
-      detectedBy: 'Bus #18 AI CCTV Stream',
-      timestamp: 'Today at 09:22 AM',
-      assignedOfficer: 'Officer S. Rao',
-      department: 'City Traffic Enforcement Unit',
-      severity: 'HIGH',
-      status: 'PENDING',
-      slaHoursRemaining: 42.2,
-      vehiclePlate: 'TS 09 EA 4281',
-      fineAmount: '₹1,000 E-Challan Generated',
-      imageUrl: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=600&q=80',
-    },
-    {
-      id: 'TK-103',
-      category: 'GARBAGE',
-      title: 'Municipal Garbage Dump Overflow',
-      location: 'Greenlands Flyover Underpass',
-      coordinates: '17.4320° N, 78.4550° E',
-      detectedBy: 'Bus #07 AI Telematics',
-      timestamp: 'Yesterday at 04:30 PM',
-      assignedOfficer: 'Insp. Anand Kumar',
-      department: 'Solid Waste Management Division',
-      severity: 'MEDIUM',
-      status: 'IN_PROGRESS',
-      slaHoursRemaining: 18.0,
-      imageUrl: 'https://images.unsplash.com/photo-1605600659908-0ef719419d41?auto=format&fit=crop&w=600&q=80',
-    },
-    {
-      id: 'TK-104',
-      category: 'ROAD_DAMAGE',
-      title: 'Water-Main Fracture & Surface Flooding',
-      location: 'Somajiguda Corridor - Pillar 48',
-      coordinates: '17.4290° N, 78.4610° E',
-      detectedBy: 'Bus #42 Telematics & AI Camera',
-      timestamp: '2 Days Ago at 11:00 AM',
-      assignedOfficer: 'Zonal Chief A. Patil',
-      department: 'Water Supply & Sewerage Board',
-      severity: 'CRITICAL',
-      status: 'ESCALATED',
-      slaHoursRemaining: 0.0,
-      imageUrl: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=600&q=80',
-    },
-    {
-      id: 'TK-105',
-      category: 'POTHOLE',
-      title: 'Surface Asphalt Depression (Pothole)',
-      location: 'MG Road • Near Central Station',
-      coordinates: '17.4350° N, 78.4680° E',
-      detectedBy: 'Bus #29 Telematics',
-      timestamp: '3 Days Ago at 02:15 PM',
-      assignedOfficer: 'Eng. R. K. Varma',
-      department: 'GHMC Road Maintenance Ward 14',
-      severity: 'LOW',
-      status: 'RESOLVED',
-      slaHoursRemaining: 0.0,
-      imageUrl: 'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&w=600&q=80',
-    },
-  ]);
-
-  // SLA countdown timer simulation
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTickets((prev) =>
-        prev.map((t) => {
-          if (t.status === 'RESOLVED') return t;
-          const nextSla = Math.max(0, t.slaHoursRemaining - 0.01);
-          const nextStatus = nextSla <= 0 ? 'ESCALATED' : t.status;
-          return {
-            ...t,
-            slaHoursRemaining: parseFloat(nextSla.toFixed(2)),
-            status: nextStatus,
-          };
-        })
-      );
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const handleUpdateStatus = (ticketId: string, newStatus: Ticket['status']) => {
-    setTickets((prev) =>
-      prev.map((t) => (t.id === ticketId ? { ...t, status: newStatus } : t))
-    );
-    if (selectedTicket && selectedTicket.id === ticketId) {
-      setSelectedTicket((prev) => (prev ? { ...prev, status: newStatus } : null));
-    }
-  };
+  const [selectedTicket, setSelectedTicket] = useState<TicketItem | null>(null);
 
   const filteredTickets = tickets.filter((t) => {
-    const matchCategory =
-      selectedCategory === 'ALL' || t.category === selectedCategory;
+    const matchCategory = selectedCategory === 'ALL' || t.category === selectedCategory;
     const matchSearch =
       t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       t.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -188,16 +57,26 @@ export const TicketsView: React.FC<TicketsViewProps> = ({
           </p>
         </div>
 
-        {/* Search Input */}
-        <div className="relative w-72">
-          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search ticket ID, road, plate..."
-            className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#16A34A] transition"
-          />
+        {/* Search & Actions */}
+        <div className="flex items-center gap-3">
+          <div className="relative w-72">
+            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search ticket ID, road, plate..."
+              className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#16A34A] transition"
+            />
+          </div>
+
+          <button
+            onClick={() => triggerManualIncident('POTHOLE')}
+            className="px-3.5 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-semibold transition cursor-pointer"
+            title="Simulate a new incoming bus detection"
+          >
+            + Test Incident
+          </button>
         </div>
       </div>
 
@@ -275,7 +154,7 @@ export const TicketsView: React.FC<TicketsViewProps> = ({
                 <div
                   onClick={() => setSelectedTicket(t)}
                   className="w-20 h-20 rounded-lg overflow-hidden border border-gray-200 shrink-0 cursor-pointer group relative bg-gray-100"
-                  title="Click to inspect visual evidence"
+                  title="Click to inspect visual evidence & escalation"
                 >
                   <img
                     src={t.imageUrl}
@@ -288,7 +167,7 @@ export const TicketsView: React.FC<TicketsViewProps> = ({
                 </div>
               </div>
 
-              {/* Specific info: Plate or Detection source */}
+              {/* Information readout */}
               <div className="bg-gray-50 rounded-lg p-3 border border-gray-100 text-xs space-y-1.5">
                 {t.vehiclePlate && (
                   <div className="flex items-center justify-between">
@@ -300,7 +179,7 @@ export const TicketsView: React.FC<TicketsViewProps> = ({
                 )}
                 {t.fineAmount && (
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-500 font-medium">Violation Notice:</span>
+                    <span className="text-gray-500 font-medium">Violation Fine Notice:</span>
                     <span className="font-bold text-red-600">{t.fineAmount}</span>
                   </div>
                 )}
@@ -309,12 +188,12 @@ export const TicketsView: React.FC<TicketsViewProps> = ({
                   <span className="text-gray-800 font-medium">{t.detectedBy}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-500 font-medium">Assigned Authority:</span>
+                  <span className="text-gray-500 font-medium">Assigned Officer:</span>
                   <span className="text-gray-800 font-medium">{t.assignedOfficer} ({t.department})</span>
                 </div>
               </div>
 
-              {/* 48-Hour SLA Timer Bar & Escalation */}
+              {/* 48-Hour SLA Timer Bar & Escalation Status */}
               <div className="border-t border-gray-100 pt-3 flex items-center justify-between flex-wrap gap-2 text-xs">
                 <div className="flex items-center gap-2">
                   <Clock className={`w-4 h-4 ${isEscalated ? 'text-red-600' : isResolved ? 'text-[#16A34A]' : 'text-amber-600'}`} />
@@ -336,7 +215,7 @@ export const TicketsView: React.FC<TicketsViewProps> = ({
                 <div className="flex items-center gap-2">
                   {t.status === 'PENDING' && (
                     <button
-                      onClick={() => handleUpdateStatus(t.id, 'IN_PROGRESS')}
+                      onClick={() => updateTicketStatus(t.id, 'IN_PROGRESS')}
                       className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition cursor-pointer"
                     >
                       Dispatch Crew
@@ -344,7 +223,7 @@ export const TicketsView: React.FC<TicketsViewProps> = ({
                   )}
                   {t.status === 'IN_PROGRESS' && (
                     <button
-                      onClick={() => handleUpdateStatus(t.id, 'RESOLVED')}
+                      onClick={() => updateTicketStatus(t.id, 'RESOLVED')}
                       className="px-3 py-1.5 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white font-semibold text-xs transition cursor-pointer flex items-center gap-1"
                     >
                       <Check className="w-3.5 h-3.5" />
@@ -353,7 +232,7 @@ export const TicketsView: React.FC<TicketsViewProps> = ({
                   )}
                   {t.status === 'ESCALATED' && (
                     <button
-                      onClick={() => handleUpdateStatus(t.id, 'RESOLVED')}
+                      onClick={() => updateTicketStatus(t.id, 'RESOLVED')}
                       className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold text-xs transition cursor-pointer"
                     >
                       Emergency Close
@@ -362,7 +241,7 @@ export const TicketsView: React.FC<TicketsViewProps> = ({
                   <button
                     onClick={() => setSelectedTicket(t)}
                     className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-600 transition cursor-pointer"
-                    title="View Evidence Details"
+                    title="View Comprehensive Ticket Dossier"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
                   </button>
@@ -373,85 +252,133 @@ export const TicketsView: React.FC<TicketsViewProps> = ({
         })}
       </div>
 
-      {/* Ticket Details & Visual Evidence Modal */}
+      {/* COMPREHENSIVE TICKET DOSSIER & ESCALATION MODAL */}
       {selectedTicket && (
         <div
           className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
           onClick={() => setSelectedTicket(null)}
         >
           <div
-            className="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl border border-gray-200 relative animate-in fade-in"
+            className="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-5 shadow-2xl border border-gray-200 relative animate-in fade-in"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Modal Header */}
             <div className="flex items-start justify-between">
               <div>
-                <span className="font-mono font-bold text-xs bg-gray-100 px-2 py-0.5 rounded border border-gray-200">
-                  {selectedTicket.id}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono font-bold text-xs bg-gray-100 px-2.5 py-0.5 rounded border border-gray-200">
+                    {selectedTicket.id}
+                  </span>
+                  <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-emerald-50 text-[#16A34A] border border-emerald-200">
+                    {selectedTicket.category.replace('_', ' ')}
+                  </span>
+                </div>
                 <h3 className="text-lg font-bold text-gray-900 mt-1">{selectedTicket.title}</h3>
                 <p className="text-xs text-gray-500">{selectedTicket.location} • {selectedTicket.coordinates}</p>
               </div>
               <button
                 onClick={() => setSelectedTicket(null)}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition"
+                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Evidence Image */}
-            <div className="rounded-xl overflow-hidden border border-gray-200 h-64 bg-gray-900 relative">
+            <div className="rounded-xl overflow-hidden border border-gray-200 h-60 bg-gray-900 relative">
               <img
                 src={selectedTicket.imageUrl}
                 alt="Ticket Evidence"
                 className="w-full h-full object-cover"
               />
-              <div className="absolute bottom-3 left-3 bg-black/80 px-3 py-1 rounded text-xs font-mono text-white">
-                Camera Timestamp: {selectedTicket.timestamp}
+              <div className="absolute bottom-3 left-3 bg-black/85 px-3 py-1 rounded-md text-xs font-mono text-white flex items-center gap-2">
+                <Camera className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Camera Telematics: {selectedTicket.timestamp} ({selectedTicket.detectedBy})</span>
               </div>
             </div>
 
-            {/* Details */}
-            <div className="grid grid-cols-2 gap-3 text-xs bg-gray-50 p-4 rounded-xl border border-gray-100">
-              <div>
-                <span className="text-gray-500 block">Assigned Officer:</span>
-                <strong className="text-gray-900 font-semibold">{selectedTicket.assignedOfficer}</strong>
+            {/* 3-Tier Escalation Timeline & 48-Hour SLA */}
+            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wide">
+                  48-Hour Resolution SLA & Escalation Hierarchy
+                </h4>
+                <span className="font-mono text-xs font-bold text-gray-800">
+                  {selectedTicket.status === 'RESOLVED'
+                    ? 'RESOLVED'
+                    : selectedTicket.status === 'ESCALATED'
+                    ? 'ESCALATED (>48h)'
+                    : `${Math.floor(selectedTicket.slaHoursRemaining)}h remaining`}
+                </span>
               </div>
-              <div>
-                <span className="text-gray-500 block">Department:</span>
-                <strong className="text-gray-900 font-semibold">{selectedTicket.department}</strong>
+
+              {/* Progress Bar */}
+              <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                <div
+                  className={`h-full transition-all duration-500 ${
+                    selectedTicket.status === 'RESOLVED'
+                      ? 'bg-[#16A34A]'
+                      : selectedTicket.status === 'ESCALATED'
+                      ? 'bg-red-600'
+                      : 'bg-amber-500'
+                  }`}
+                  style={{
+                    width: `${Math.min(100, Math.max(5, ((48 - selectedTicket.slaHoursRemaining) / 48) * 100))}%`,
+                  }}
+                />
               </div>
-              {selectedTicket.vehiclePlate && (
-                <div>
-                  <span className="text-gray-500 block">Vehicle License Plate:</span>
-                  <strong className="text-gray-900 font-mono font-bold">{selectedTicket.vehiclePlate}</strong>
+
+              {/* 3-Tier Hierarchy Steps */}
+              <div className="grid grid-cols-3 gap-2 text-[11px] pt-1">
+                <div className={`p-2 rounded-lg border ${
+                  selectedTicket.slaHoursRemaining > 24
+                    ? 'bg-white border-[#16A34A] text-gray-900 font-semibold'
+                    : 'bg-gray-100 text-gray-500 border-gray-200'
+                }`}>
+                  <span className="block font-bold text-[10px] text-gray-400 uppercase">Tier 1 (0–24h)</span>
+                  <span>{selectedTicket.assignedOfficer}</span>
+                  <span className="block text-[10px] text-gray-500">Ward Engineer</span>
                 </div>
-              )}
-              {selectedTicket.fineAmount && (
-                <div>
-                  <span className="text-gray-500 block">Violation Fine Notice:</span>
-                  <strong className="text-red-600 font-bold">{selectedTicket.fineAmount}</strong>
+
+                <div className={`p-2 rounded-lg border ${
+                  selectedTicket.slaHoursRemaining <= 24 && selectedTicket.slaHoursRemaining > 0
+                    ? 'bg-amber-50 border-amber-400 text-amber-900 font-semibold'
+                    : 'bg-gray-100 text-gray-500 border-gray-200'
+                }`}>
+                  <span className="block font-bold text-[10px] text-gray-400 uppercase">Tier 2 (24–48h)</span>
+                  <span>Zonal Superintendent</span>
+                  <span className="block text-[10px] text-gray-500">Traffic Ops Division</span>
                 </div>
-              )}
+
+                <div className={`p-2 rounded-lg border ${
+                  selectedTicket.slaHoursRemaining <= 0
+                    ? 'bg-red-50 border-red-500 text-red-900 font-bold'
+                    : 'bg-gray-100 text-gray-500 border-gray-200'
+                }`}>
+                  <span className="block font-bold text-[10px] text-gray-400 uppercase">Tier 3 (&gt;48h)</span>
+                  <span>Chief Commissioner</span>
+                  <span className="block text-[10px] text-gray-500">Emergency Escalation</span>
+                </div>
+              </div>
             </div>
 
             {/* Modal Actions */}
             <div className="flex items-center justify-end gap-3 pt-2">
               <button
                 onClick={() => setSelectedTicket(null)}
-                className="px-4 py-2 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition"
+                className="px-4 py-2 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition cursor-pointer"
               >
-                Close
+                Close Dossier
               </button>
               {selectedTicket.status !== 'RESOLVED' && (
                 <button
                   onClick={() => {
-                    handleUpdateStatus(selectedTicket.id, 'RESOLVED');
+                    updateTicketStatus(selectedTicket.id, 'RESOLVED');
                     setSelectedTicket(null);
                   }}
-                  className="px-4 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition"
+                  className="px-4 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition cursor-pointer"
                 >
-                  Mark as Resolved
+                  Mark as Resolved & Close Ticket
                 </button>
               )}
             </div>
