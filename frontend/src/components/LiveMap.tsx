@@ -24,9 +24,9 @@ export const LiveMap: React.FC<LiveMapProps> = ({ onSelectHazard }) => {
   useEffect(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return;
 
-    // Centered over Somajiguda / Punjagutta / Banjara Hills Hyderabad
+    // Centered over Banjara Hills / Somajiguda / Punjagutta Road Network
     const map = L.map(mapContainerRef.current, {
-      center: [17.4260, 78.4530],
+      center: [17.4250, 78.4480],
       zoom: 14,
       zoomControl: false,
     });
@@ -63,63 +63,67 @@ export const LiveMap: React.FC<LiveMapProps> = ({ onSelectHazard }) => {
     tileLayerRef.current = newTile;
   }, [mapType]);
 
-  // 3. Update 6 Moving Indian Transit Buses on the Map
+  // 3. Update 6 Moving Indian Transit Buses on the Map (Pixel-Perfect GPS Anchoring)
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
     buses.forEach((bus) => {
       const isStopped = bus.status === 'TRANSIT_STOP';
       const isAlert = bus.status === 'HAZARD_ALERT';
+      const bgColor = isAlert ? '#DC2626' : isStopped ? '#D97706' : '#16A34A';
 
+      // Pixel-perfect bottom-anchored pin with zero CSS transform conflicts
       const customIcon = L.divIcon({
-        className: 'bus-marker-container',
+        className: 'bus-pin-wrapper',
         html: `
           <div style="
+            width: 80px;
+            height: 32px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            transform: translate(-50%, -50%);
-            cursor: pointer;
-            transition: all 0.3s ease-out;
+            justify-content: flex-end;
+            user-select: none;
+            pointer-events: auto;
           ">
             <div style="
-              background: ${isAlert ? '#DC2626' : isStopped ? '#D97706' : '#16A34A'};
+              background: ${bgColor};
               color: white;
-              padding: 3px 8px;
-              border-radius: 6px;
-              font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+              padding: 2px 6px;
+              border-radius: 5px;
+              font-family: ui-monospace, monospace;
               font-size: 11px;
               font-weight: 800;
-              box-shadow: 0 4px 10px rgba(0,0,0,0.25);
-              border: 2px solid white;
+              box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+              border: 1.5px solid white;
               display: flex;
               align-items: center;
-              gap: 4px;
+              gap: 3px;
               white-space: nowrap;
+              line-height: 1;
             ">
               <span style="font-size: 10px;">🚌</span>
               <span>${bus.id}</span>
-              <span style="font-size: 9px; opacity: 0.9; background: rgba(0,0,0,0.2); padding: 1px 4px; border-radius: 3px;">
-                ${bus.speedKmh} km/h
+              <span style="font-size: 9px; opacity: 0.9; background: rgba(0,0,0,0.25); padding: 1px 3px; border-radius: 2px;">
+                ${bus.speedKmh}k
               </span>
             </div>
             <div style="
-              width: 8px;
-              height: 8px;
-              background: ${isAlert ? '#DC2626' : '#16A34A'};
-              border: 2px solid white;
+              width: 6px;
+              height: 6px;
+              background: ${bgColor};
+              border: 1.5px solid white;
               border-radius: 50%;
-              margin-top: -2px;
-              box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+              margin-top: -1px;
+              box-shadow: 0 1px 3px rgba(0,0,0,0.4);
             "></div>
           </div>
         `,
-        iconSize: [80, 40],
-        iconAnchor: [40, 20],
+        iconSize: [80, 32],
+        iconAnchor: [40, 32], // Bottom-center anchored exactly to GPS lat/lng
       });
 
       if (busMarkersRef.current[bus.id]) {
-        // Smoothly update position
         busMarkersRef.current[bus.id].setLatLng([bus.lat, bus.lng]);
         busMarkersRef.current[bus.id].setIcon(customIcon);
       } else {
@@ -136,18 +140,20 @@ export const LiveMap: React.FC<LiveMapProps> = ({ onSelectHazard }) => {
     if (!activeMapAlert || !mapInstanceRef.current) return;
 
     const alertIcon = L.divIcon({
-      className: 'map-alert-popup-container',
+      className: 'map-alert-popup-wrapper',
       html: `
         <div style="
-          transform: translate(-50%, -100%);
-          animation: bounce 0.4s ease-out;
+          width: 240px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
         ">
           <div style="
             background: #111827;
             color: white;
             padding: 8px 12px;
             border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.35);
             border: 2px solid ${activeMapAlert.type === 'NO_HELMET' ? '#3B82F6' : '#DC2626'};
             display: flex;
             align-items: center;
@@ -155,8 +161,8 @@ export const LiveMap: React.FC<LiveMapProps> = ({ onSelectHazard }) => {
             white-space: nowrap;
           ">
             <div style="
-              width: 22px;
-              height: 22px;
+              width: 20px;
+              height: 20px;
               border-radius: 50%;
               background: ${activeMapAlert.type === 'NO_HELMET' ? '#3B82F6' : '#DC2626'};
               display: flex;
@@ -179,15 +185,15 @@ export const LiveMap: React.FC<LiveMapProps> = ({ onSelectHazard }) => {
           <div style="
             width: 0;
             height: 0;
-            border-left: 6px solid transparent;
-            border-right: 6px solid transparent;
-            border-top: 6px solid #111827;
-            margin: 0 auto;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 5px solid #111827;
+            margin-top: -1px;
           "></div>
         </div>
       `,
-      iconSize: [240, 60],
-      iconAnchor: [120, 50],
+      iconSize: [240, 54],
+      iconAnchor: [120, 54],
     });
 
     const alertMarker = L.marker([activeMapAlert.lat, activeMapAlert.lng], {
@@ -199,7 +205,7 @@ export const LiveMap: React.FC<LiveMapProps> = ({ onSelectHazard }) => {
   }, [activeMapAlert]);
 
   return (
-    <div className="relative w-full h-full min-h-[500px] select-none">
+    <div className="relative w-full h-full select-none">
       {/* Leaflet Map Div */}
       <div ref={mapContainerRef} className="w-full h-full z-0" />
 

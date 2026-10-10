@@ -69,7 +69,7 @@ interface SimulationStoreType {
 
 const SimulationStoreContext = createContext<SimulationStoreType | undefined>(undefined);
 
-// Real Hyderabad road corridors (Somajiguda, Banjara Hills, Begumpet, Tank Bund Road, Punjagutta, Khairatabad)
+// Real Hyderabad inland road corridors (Somajiguda, Banjara Hills, Begumpet, Punjagutta, Ameerpet, Lakdikapul)
 const INITIAL_BUSES: BusRouteInfo[] = [
   {
     id: '47L',
@@ -85,14 +85,14 @@ const INITIAL_BUSES: BusRouteInfo[] = [
     heading: 45,
     occupancy: '38 / 52 Seats',
     waypoints: [
-      [17.4160, 78.4340], // Banjara Hills Rd 1
-      [17.4210, 78.4420], // Nagarjuna Circle
-      [17.4255, 78.4520], // Somajiguda 5th Ave
-      [17.4310, 78.4560], // Greenlands Flyover
-      [17.4370, 78.4590], // Begumpet Main Rd
-      [17.4310, 78.4560],
-      [17.4255, 78.4520],
-      [17.4210, 78.4420],
+      [17.4200, 78.4350], // Banjara Hills Rd 10
+      [17.4245, 78.4440], // Nagarjuna Circle
+      [17.4275, 78.4485], // Punjagutta
+      [17.4240, 78.4540], // Somajiguda Raj Bhavan Rd
+      [17.4140, 78.4580], // Khairatabad Flyover
+      [17.4240, 78.4540],
+      [17.4275, 78.4485],
+      [17.4245, 78.4440],
     ],
     currentWaypointIdx: 2,
     progress: 0.4,
@@ -130,19 +130,19 @@ const INITIAL_BUSES: BusRouteInfo[] = [
     speedKmh: 48,
     status: 'IN_TRANSIT',
     currentLocationName: 'Punjagutta Main Flyover',
-    lat: 17.4285,
-    lng: 78.4480,
+    lat: 17.4278,
+    lng: 78.4485,
     heading: 90,
     occupancy: '49 / 52 Seats',
     waypoints: [
       [17.4045, 78.4630], // Lakdikapul
-      [17.4120, 78.4590], // Khairatabad Flyover
-      [17.4200, 78.4560], // Raj Bhavan Road
-      [17.4260, 78.4530], // Somajiguda
-      [17.4285, 78.4480], // Punjagutta X Roads
-      [17.4360, 78.4420], // Ameerpet
-      [17.4285, 78.4480],
-      [17.4200, 78.4560],
+      [17.4130, 78.4585], // Khairatabad Flyover
+      [17.4250, 78.4535], // Somajiguda
+      [17.4278, 78.4485], // Punjagutta X Roads
+      [17.4355, 78.4440], // Ameerpet Metro
+      [17.4278, 78.4485],
+      [17.4250, 78.4535],
+      [17.4130, 78.4585],
     ],
     currentWaypointIdx: 3,
     progress: 0.5,
@@ -161,15 +161,16 @@ const INITIAL_BUSES: BusRouteInfo[] = [
     heading: 180,
     occupancy: '31 / 52 Seats',
     waypoints: [
-      [17.3940, 78.4690], // Nampally Station
-      [17.4000, 78.4670], // Public Gardens / Assembly
+      [17.3920, 78.4690], // Nampally Station
+      [17.3990, 78.4670], // Public Gardens
       [17.4045, 78.4630], // Lakdikapul Metro Bay
-      [17.4090, 78.4580], // Saifabad / Khairatabad
+      [17.4050, 78.4460], // Masab Tank
+      [17.3950, 78.4380], // Mehdipatnam
+      [17.4050, 78.4460],
       [17.4045, 78.4630],
-      [17.4000, 78.4670],
     ],
-    currentWaypointIdx: 1,
-    progress: 0.2,
+    currentWaypointIdx: 2,
+    progress: 0.3,
   },
   {
     id: '222A',
@@ -185,39 +186,36 @@ const INITIAL_BUSES: BusRouteInfo[] = [
     heading: 270,
     occupancy: '26 / 52 Seats',
     waypoints: [
-      [17.3980, 78.4380], // Mehdipatnam
-      [17.4050, 78.4440], // Masab Tank Flyover
-      [17.4130, 78.4410], // Banjara Hills Rd 1
-      [17.4180, 78.4350], // Care Hospital Rd 10
-      [17.4240, 78.4310], // Road No. 12 Junction
-      [17.4180, 78.4350],
+      [17.4280, 78.4280], // Jubilee Hills Checkpost
+      [17.4180, 78.4350], // Road No. 12
+      [17.4130, 78.4410], // Road No. 1 / Taj Krishna
+      [17.4050, 78.4460], // Masab Tank
       [17.4130, 78.4410],
+      [17.4180, 78.4350],
     ],
-    currentWaypointIdx: 2,
+    currentWaypointIdx: 1,
     progress: 0.4,
   },
   {
     id: '5K',
     busCode: 'TS 09 Z 0505',
-    routeName: 'Secunderabad ⇄ Mehdipatnam via Tank Bund',
+    routeName: 'Secunderabad ⇄ Mehdipatnam via Minister Road',
     driverName: 'D. Naidu',
     driverContact: '+91 98850 77123',
     speedKmh: 39,
     status: 'IN_TRANSIT',
-    currentLocationName: 'Tank Bund Roadway Corridor',
-    lat: 17.4220,
-    lng: 78.4850,
+    currentLocationName: 'Minister Road Corridor',
+    lat: 17.4420,
+    lng: 78.4780,
     heading: 330,
     occupancy: '42 / 52 Seats',
     waypoints: [
-      [17.4420, 78.4870], // Ranigunj / Minister Road
-      [17.4320, 78.4860], // Upper Tank Bund
-      [17.4220, 78.4850], // Tank Bund Road (East embankment on road)
-      [17.4130, 78.4830], // Lower Tank Bund / Ambedkar Statue
-      [17.4080, 78.4760], // Telugu Thalli Flyover / Secretariat
-      [17.4130, 78.4830],
-      [17.4220, 78.4850],
-      [17.4320, 78.4860],
+      [17.4400, 78.4980], // Secunderabad Station
+      [17.4380, 78.4870], // Ranigunj
+      [17.4420, 78.4780], // Minister Road
+      [17.4440, 78.4680], // Begumpet East
+      [17.4420, 78.4780],
+      [17.4380, 78.4870],
     ],
     currentWaypointIdx: 2,
     progress: 0.3,

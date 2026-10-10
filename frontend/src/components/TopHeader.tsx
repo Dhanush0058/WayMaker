@@ -1,16 +1,14 @@
 import React from 'react';
-import { BarChart2, Radio } from 'lucide-react';
+import { BarChart2 } from 'lucide-react';
 import { DashboardSummary } from '../types';
 
 interface TopHeaderProps {
   summary?: DashboardSummary;
-  isConnected: boolean;
+  isConnected?: boolean;
   onOpenMetrics: () => void;
 }
 
 export const TopHeader: React.FC<TopHeaderProps> = ({
-  summary,
-  isConnected,
   onOpenMetrics,
 }) => {
   return (
@@ -33,29 +31,11 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
         </div>
       </div>
 
-      {/* Right Actions: Live Status & Benchmark Trigger */}
-      <div className="flex items-center gap-4">
-        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium transition ${
-          isConnected
-            ? 'bg-emerald-50 border-emerald-200 text-[#16A34A]'
-            : 'bg-red-50 border-red-200 text-red-600'
-        }`}>
-          <span className="relative flex h-2 w-2">
-            {isConnected ? (
-              <>
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16A34A] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#16A34A]"></span>
-              </>
-            ) : (
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-            )}
-          </span>
-          <span>{isConnected ? 'System Online' : 'Offline'}</span>
-        </div>
-
+      {/* Right Action: System Metrics */}
+      <div className="flex items-center gap-3">
         <button
           onClick={onOpenMetrics}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-900 hover:bg-black text-white text-xs font-semibold transition cursor-pointer"
+          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-gray-900 hover:bg-black text-white text-xs font-semibold transition cursor-pointer"
         >
           <BarChart2 className="w-3.5 h-3.5 text-emerald-400" />
           <span>System Metrics</span>

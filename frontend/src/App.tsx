@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { TopHeader } from './components/TopHeader';
 import { Sidebar } from './components/Sidebar';
-import { ScenarioBar } from './components/ScenarioBar';
 import { LiveMap } from './components/LiveMap';
 import { EvaluationMetricsModal } from './components/EvaluationMetricsModal';
 
@@ -83,30 +82,9 @@ export const AppContent: React.FC = () => {
     };
   }, []);
 
-  const handleApiAction = async (endpoint: string, method: string = 'POST', body?: any) => {
-    try {
-      await fetch(`${API_BASE}${endpoint}`, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: body ? JSON.stringify(body) : undefined,
-      });
-      fetchSnapshot();
-    } catch (err) {
-      console.error('API Error:', err);
-    }
-  };
-
-  const handleStart = () => handleApiAction('/api/simulation/start');
-  const handlePause = () => handleApiAction('/api/simulation/pause');
-  const handleReset = () => handleApiAction('/api/simulation/reset');
-  const handleTriggerWaterBreak = () => handleApiAction('/api/simulation/water-main-break');
-  const handleTriggerFalseAlarm = () => handleApiAction('/api/simulation/false-alarm');
-  const handleTriggerSecondaryAccident = () => handleApiAction('/api/simulation/secondary-accident');
-  const handleDispatchAmbulance = () => handleApiAction('/api/ambulances/dispatch');
-
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-gray-900 flex flex-col font-sans select-none">
-      {/* Top Header */}
+      {/* Clean Minimal Top Header */}
       <TopHeader
         summary={data?.summary}
         isConnected={isConnected}
@@ -121,26 +99,11 @@ export const AppContent: React.FC = () => {
           setActiveTab={setActiveTab}
         />
 
-        {/* Center: Dynamic View Area (Full screen width) */}
+        {/* Center: Dynamic View Area (Full screen width & height) */}
         <main className="flex-1 p-5 overflow-y-auto space-y-4">
           {activeTab === 'live-map' && (
-            <div className="flex flex-col h-[calc(100vh-105px)] space-y-3">
-              {/* Clean Scenario Control Bar */}
-              <ScenarioBar
-                simulationState={data?.summary.simulation_state ?? 'RUNNING'}
-                onStart={handleStart}
-                onPause={handlePause}
-                onReset={handleReset}
-                onTriggerWaterBreak={handleTriggerWaterBreak}
-                onDispatchAmbulance={handleDispatchAmbulance}
-                onTriggerFalseAlarm={handleTriggerFalseAlarm}
-                onTriggerSecondaryAccident={handleTriggerSecondaryAccident}
-              />
-
-              {/* Full-Width Live GIS Map with 6 Moving Indian Transit Buses */}
-              <div className="flex-1 min-h-0 rounded-2xl overflow-hidden border border-gray-200 shadow-xs">
-                <LiveMap onSelectHazard={() => setActiveTab('tickets')} />
-              </div>
+            <div className="h-[calc(100vh-100px)] rounded-2xl overflow-hidden border border-gray-200 shadow-xs">
+              <LiveMap onSelectHazard={() => setActiveTab('tickets')} />
             </div>
           )}
 
