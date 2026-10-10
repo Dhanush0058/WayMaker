@@ -7,14 +7,12 @@ import { LiveMap } from './components/LiveMap';
 import { RightSidebar } from './components/RightSidebar';
 import { EvaluationMetricsModal } from './components/EvaluationMetricsModal';
 
-// Views for every sidebar option
+// Cleaned core views
 import { IncidentsView } from './components/views/IncidentsView';
 import { BusesView } from './components/views/BusesView';
 import { AmbulancesView } from './components/views/AmbulancesView';
 import { SignalsView } from './components/views/SignalsView';
 import { AnalyticsView } from './components/views/AnalyticsView';
-import { ReportsView } from './components/views/ReportsView';
-import { SettingsView } from './components/views/SettingsView';
 
 import { SnapshotData } from './types';
 
@@ -119,7 +117,7 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-gray-900 flex flex-col font-sans select-none">
-      {/* Top Header */}
+      {/* Streamlined Top Header */}
       <TopHeader
         summary={data?.summary}
         isConnected={isConnected}
@@ -128,21 +126,21 @@ export const App: React.FC = () => {
 
       {/* Main Container: 3-column Layout */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left: Sidebar (Navigation + Real-time Feed) */}
+        {/* Left: Streamlined Sidebar with dynamic live events */}
         <Sidebar
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           events={data?.events ?? []}
         />
 
-        {/* Center: Dynamic View Area based on Selected Tab */}
+        {/* Center: Dynamic View Area */}
         <main className="flex-1 p-5 overflow-y-auto space-y-4">
           {activeTab === 'live-map' && (
             <>
-              {/* Top 4 Summary Cards */}
+              {/* Summary Cards */}
               <MetricCards summary={data?.summary} />
 
-              {/* Scenario Trigger & Playback Bar */}
+              {/* Clean Scenario Control Bar */}
               <ScenarioBar
                 simulationState={data?.summary.simulation_state ?? 'IDLE'}
                 onStart={handleStart}
@@ -152,10 +150,9 @@ export const App: React.FC = () => {
                 onDispatchAmbulance={handleDispatchAmbulance}
                 onTriggerFalseAlarm={handleTriggerFalseAlarm}
                 onTriggerSecondaryAccident={handleTriggerSecondaryAccident}
-                onOpenMetrics={() => setIsMetricsOpen(true)}
               />
 
-              {/* Central Live Map */}
+              {/* Live Interactive GIS Map */}
               <LiveMap
                 vehicles={data?.vehicles ?? []}
                 hazards={data?.hazards ?? []}
@@ -198,17 +195,9 @@ export const App: React.FC = () => {
           {activeTab === 'analytics' && (
             <AnalyticsView metrics={data?.metrics} />
           )}
-
-          {activeTab === 'reports' && (
-            <ReportsView events={data?.events ?? []} />
-          )}
-
-          {activeTab === 'settings' && (
-            <SettingsView onReset={handleReset} />
-          )}
         </main>
 
-        {/* Right: Selected Ambulance & Hazard Information Cards (Visible on Live Map tab) */}
+        {/* Right: Selected Ambulance & Hazard Information Cards */}
         {activeTab === 'live-map' && (
           <div className="p-5 pl-0 hidden xl:block">
             <RightSidebar

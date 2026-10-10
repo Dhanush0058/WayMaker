@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Pause, RotateCcw, Droplets, Ambulance, ShieldAlert, CheckCircle, BarChart2 } from 'lucide-react';
+import { Play, Pause, RotateCcw, Droplets, Ambulance, ShieldAlert, CheckCircle } from 'lucide-react';
 
 interface ScenarioBarProps {
   simulationState: 'IDLE' | 'RUNNING' | 'PAUSED';
@@ -10,7 +10,7 @@ interface ScenarioBarProps {
   onDispatchAmbulance: () => void;
   onTriggerFalseAlarm: () => void;
   onTriggerSecondaryAccident: () => void;
-  onOpenMetrics: () => void;
+  onOpenMetrics?: () => void;
 }
 
 export const ScenarioBar: React.FC<ScenarioBarProps> = ({
@@ -22,20 +22,19 @@ export const ScenarioBar: React.FC<ScenarioBarProps> = ({
   onDispatchAmbulance,
   onTriggerFalseAlarm,
   onTriggerSecondaryAccident,
-  onOpenMetrics,
 }) => {
   return (
-    <div className="bg-white rounded-2xl p-2.5 border border-gray-200/80 shadow-xs mb-4 flex items-center justify-between flex-wrap gap-2 text-xs">
-      {/* Playback Controls */}
+    <div className="bg-white rounded-2xl p-2.5 border border-gray-200/80 shadow-xs flex items-center justify-between flex-wrap gap-2 text-xs">
+      {/* Simulation Engine Controls */}
       <div className="flex items-center gap-1.5">
         <span className="text-[10px] font-black uppercase text-gray-400 tracking-wider mr-1">
-          Sim Controls:
+          Controls:
         </span>
 
         {simulationState === 'RUNNING' ? (
           <button
             onClick={onPause}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold transition cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold transition cursor-pointer shadow-xs"
           >
             <Pause className="w-3.5 h-3.5 fill-white" />
             <span>Pause</span>
@@ -43,7 +42,7 @@ export const ScenarioBar: React.FC<ScenarioBarProps> = ({
         ) : (
           <button
             onClick={onStart}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white font-bold transition shadow-xs shadow-[#16A34A]/20 cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white font-bold transition shadow-xs shadow-[#16A34A]/25 cursor-pointer"
           >
             <Play className="w-3.5 h-3.5 fill-white" />
             <span>{simulationState === 'PAUSED' ? 'Resume' : 'Run Simulation'}</span>
@@ -60,55 +59,50 @@ export const ScenarioBar: React.FC<ScenarioBarProps> = ({
         </button>
       </div>
 
-      {/* Scenario Triggers */}
+      {/* Demonstration Scenario Triggers */}
       <div className="flex items-center gap-1.5 flex-wrap">
         <span className="text-[10px] font-black uppercase text-gray-400 tracking-wider mr-1 hidden sm:inline">
-          Scenarios:
+          Live Scenarios:
         </span>
 
-        {/* 1. Mandatory Demo */}
+        {/* 1. Mandatory Hazard Scenario */}
         <button
           onClick={onTriggerWaterBreak}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold transition shadow-xs shadow-red-600/20 cursor-pointer"
+          title="Simulate sudden water-main fracture on 5th Avenue"
         >
           <Droplets className="w-3.5 h-3.5" />
-          <span>1. Water-Main / Pothole Break</span>
+          <span>1. Water-Main Break</span>
         </button>
 
-        {/* 2. Dispatch Ambulance */}
+        {/* 2. Emergency Dispatch */}
         <button
           onClick={onDispatchAmbulance}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white font-bold transition shadow-xs shadow-[#16A34A]/20 cursor-pointer"
+          title="Dispatch Ambulance A-17 with Dynamic Green Wave Rerouting"
         >
           <Ambulance className="w-3.5 h-3.5" />
           <span>2. Dispatch A-17</span>
         </button>
 
-        {/* 3. False Alarm */}
+        {/* 3. False Alarm Bus Stop */}
         <button
           onClick={onTriggerFalseAlarm}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold transition border border-gray-250 cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold transition border border-gray-200 cursor-pointer"
+          title="Test False Positive Prevention (Bus Stop anomaly vs real road hazard)"
         >
           <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-          <span>Scenario A: False Alarm</span>
+          <span>3. False Alarm Test</span>
         </button>
 
-        {/* 4. Secondary Crash */}
+        {/* 4. Secondary Crash Detour */}
         <button
           onClick={onTriggerSecondaryAccident}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold transition border border-amber-300 cursor-pointer"
+          title="Simulate sudden secondary corridor blockage and live dynamic recalculation"
         >
           <ShieldAlert className="w-3.5 h-3.5 text-amber-700" />
-          <span>Scenario B: Dynamic Reroute</span>
-        </button>
-
-        {/* Benchmarks modal */}
-        <button
-          onClick={onOpenMetrics}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 font-bold transition border border-blue-200 cursor-pointer"
-        >
-          <BarChart2 className="w-3.5 h-3.5 text-blue-600" />
-          <span>Evaluation Metrics</span>
+          <span>4. Dynamic Detour</span>
         </button>
       </div>
     </div>
