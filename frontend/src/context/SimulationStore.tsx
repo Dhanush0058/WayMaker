@@ -69,7 +69,7 @@ interface SimulationStoreType {
 
 const SimulationStoreContext = createContext<SimulationStoreType | undefined>(undefined);
 
-// Real Hyderabad road corridors (Somajiguda, Banjara Hills, Begumpet, Tank Bund, Punjagutta, Khairatabad)
+// Real Hyderabad road corridors (Somajiguda, Banjara Hills, Begumpet, Tank Bund Road, Punjagutta, Khairatabad)
 const INITIAL_BUSES: BusRouteInfo[] = [
   {
     id: '47L',
@@ -85,13 +85,14 @@ const INITIAL_BUSES: BusRouteInfo[] = [
     heading: 45,
     occupancy: '38 / 52 Seats',
     waypoints: [
-      [17.4180, 78.4350],
-      [17.4220, 78.4420],
+      [17.4160, 78.4340], // Banjara Hills Rd 1
+      [17.4210, 78.4420], // Nagarjuna Circle
+      [17.4255, 78.4520], // Somajiguda 5th Ave
+      [17.4310, 78.4560], // Greenlands Flyover
+      [17.4370, 78.4590], // Begumpet Main Rd
+      [17.4310, 78.4560],
       [17.4255, 78.4520],
-      [17.4290, 78.4610],
-      [17.4330, 78.4690],
-      [17.4290, 78.4610],
-      [17.4255, 78.4520],
+      [17.4210, 78.4420],
     ],
     currentWaypointIdx: 2,
     progress: 0.4,
@@ -105,17 +106,17 @@ const INITIAL_BUSES: BusRouteInfo[] = [
     speedKmh: 36,
     status: 'IN_TRANSIT',
     currentLocationName: 'Begumpet Airport Road Corridor',
-    lat: 17.4420,
-    lng: 78.4650,
+    lat: 17.4440,
+    lng: 78.4630,
     heading: 120,
     occupancy: '44 / 52 Seats',
     waypoints: [
-      [17.4480, 78.4500],
-      [17.4420, 78.4650],
-      [17.4370, 78.4720],
-      [17.4310, 78.4790],
-      [17.4370, 78.4720],
-      [17.4420, 78.4650],
+      [17.4410, 78.4550], // Begumpet Flyover
+      [17.4440, 78.4630], // Prakash Nagar / Shoppers Stop
+      [17.4465, 78.4710], // Rasoolpura Junction
+      [17.4485, 78.4810], // Paradise Circle
+      [17.4465, 78.4710],
+      [17.4440, 78.4630],
     ],
     currentWaypointIdx: 1,
     progress: 0.3,
@@ -129,20 +130,22 @@ const INITIAL_BUSES: BusRouteInfo[] = [
     speedKmh: 48,
     status: 'IN_TRANSIT',
     currentLocationName: 'Punjagutta Main Flyover',
-    lat: 17.4270,
+    lat: 17.4285,
     lng: 78.4480,
     heading: 90,
     occupancy: '49 / 52 Seats',
     waypoints: [
-      [17.4120, 78.4400],
-      [17.4200, 78.4440],
-      [17.4270, 78.4480],
-      [17.4340, 78.4530],
-      [17.4400, 78.4580],
-      [17.4340, 78.4530],
+      [17.4045, 78.4630], // Lakdikapul
+      [17.4120, 78.4590], // Khairatabad Flyover
+      [17.4200, 78.4560], // Raj Bhavan Road
+      [17.4260, 78.4530], // Somajiguda
+      [17.4285, 78.4480], // Punjagutta X Roads
+      [17.4360, 78.4420], // Ameerpet
+      [17.4285, 78.4480],
+      [17.4200, 78.4560],
     ],
-    currentWaypointIdx: 2,
-    progress: 0.6,
+    currentWaypointIdx: 3,
+    progress: 0.5,
   },
   {
     id: '127K',
@@ -153,16 +156,17 @@ const INITIAL_BUSES: BusRouteInfo[] = [
     speedKmh: 28,
     status: 'TRANSIT_STOP',
     currentLocationName: 'Lakdikapul Metro Station Bus Bay',
-    lat: 17.4080,
-    lng: 78.4620,
+    lat: 17.4045,
+    lng: 78.4630,
     heading: 180,
     occupancy: '31 / 52 Seats',
     waypoints: [
-      [17.4010, 78.4710],
-      [17.4080, 78.4620],
-      [17.4150, 78.4550],
-      [17.4210, 78.4490],
-      [17.4150, 78.4550],
+      [17.3940, 78.4690], // Nampally Station
+      [17.4000, 78.4670], // Public Gardens / Assembly
+      [17.4045, 78.4630], // Lakdikapul Metro Bay
+      [17.4090, 78.4580], // Saifabad / Khairatabad
+      [17.4045, 78.4630],
+      [17.4000, 78.4670],
     ],
     currentWaypointIdx: 1,
     progress: 0.2,
@@ -176,19 +180,21 @@ const INITIAL_BUSES: BusRouteInfo[] = [
     speedKmh: 34,
     status: 'IN_TRANSIT',
     currentLocationName: 'Banjara Hills Road No. 12',
-    lat: 17.4140,
-    lng: 78.4380,
+    lat: 17.4180,
+    lng: 78.4350,
     heading: 270,
     occupancy: '26 / 52 Seats',
     waypoints: [
-      [17.4050, 78.4280],
-      [17.4140, 78.4380],
-      [17.4210, 78.4450],
-      [17.4280, 78.4510],
-      [17.4210, 78.4450],
+      [17.3980, 78.4380], // Mehdipatnam
+      [17.4050, 78.4440], // Masab Tank Flyover
+      [17.4130, 78.4410], // Banjara Hills Rd 1
+      [17.4180, 78.4350], // Care Hospital Rd 10
+      [17.4240, 78.4310], // Road No. 12 Junction
+      [17.4180, 78.4350],
+      [17.4130, 78.4410],
     ],
-    currentWaypointIdx: 1,
-    progress: 0.5,
+    currentWaypointIdx: 2,
+    progress: 0.4,
   },
   {
     id: '5K',
@@ -198,21 +204,23 @@ const INITIAL_BUSES: BusRouteInfo[] = [
     driverContact: '+91 98850 77123',
     speedKmh: 39,
     status: 'IN_TRANSIT',
-    currentLocationName: 'Tank Bund Lakefront Promenade',
-    lat: 17.4230,
-    lng: 78.4740,
+    currentLocationName: 'Tank Bund Roadway Corridor',
+    lat: 17.4220,
+    lng: 78.4850,
     heading: 330,
     occupancy: '42 / 52 Seats',
     waypoints: [
-      [17.4100, 78.4790],
-      [17.4170, 78.4760],
-      [17.4230, 78.4740],
-      [17.4320, 78.4710],
-      [17.4410, 78.4680],
-      [17.4320, 78.4710],
+      [17.4420, 78.4870], // Ranigunj / Minister Road
+      [17.4320, 78.4860], // Upper Tank Bund
+      [17.4220, 78.4850], // Tank Bund Road (East embankment on road)
+      [17.4130, 78.4830], // Lower Tank Bund / Ambedkar Statue
+      [17.4080, 78.4760], // Telugu Thalli Flyover / Secretariat
+      [17.4130, 78.4830],
+      [17.4220, 78.4850],
+      [17.4320, 78.4860],
     ],
     currentWaypointIdx: 2,
-    progress: 0.4,
+    progress: 0.3,
   },
 ];
 
