@@ -234,16 +234,16 @@ export const LiveMap: React.FC<LiveMapProps> = ({ onSelectHazard }) => {
       {/* Leaflet Map Div */}
       <div ref={mapContainerRef} className="w-full h-full z-0" />
 
-      {/* TOP-CENTER DYNAMIC 4s POPUP ALERT TOAST (Auto-Dismissing Banner) */}
+      {/* TOP-LEFT DYNAMIC POPUP ALERT TOAST (Auto-Dismissing Banner) */}
       {activeMapAlert && (
         <div
           onClick={() => onSelectHazard?.()}
           style={{ zIndex: 9999 }}
-          className="absolute top-4 left-1/2 -translate-x-1/2 max-w-md w-[90%] bg-gray-950/95 text-white p-3.5 rounded-2xl shadow-2xl border border-gray-700 flex items-center justify-between gap-3 animate-in slide-in-from-top-4 duration-300 backdrop-blur-md cursor-pointer hover:border-gray-500 transition"
+          className="absolute top-4 left-4 max-w-sm w-auto bg-gray-950/95 text-white p-3 rounded-xl shadow-2xl border border-gray-700 flex items-center justify-between gap-3 animate-in slide-in-from-left-4 duration-300 backdrop-blur-md cursor-pointer hover:border-gray-500 transition"
           title="Click to view ticket dossier"
         >
-          <div className="flex items-center gap-3 min-w-0">
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 font-bold ${
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-bold ${
               activeMapAlert.type === 'NO_HELMET'
                 ? 'bg-blue-600/30 text-blue-400 border border-blue-500/40'
                 : 'bg-red-600/30 text-red-400 border border-red-500/40'
@@ -251,24 +251,24 @@ export const LiveMap: React.FC<LiveMapProps> = ({ onSelectHazard }) => {
               {activeMapAlert.type === 'NO_HELMET' ? '🛵' : '⚠️'}
             </div>
             <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className={`text-[10px] font-bold uppercase px-1.5 py-0.2 rounded border ${
+              <div className="flex items-center gap-1.5">
+                <span className={`text-[9px] font-bold uppercase px-1.5 py-0.2 rounded border ${
                   activeMapAlert.type === 'NO_HELMET'
                     ? 'bg-blue-500/20 text-blue-300 border-blue-400/30'
                     : 'bg-red-500/20 text-red-300 border-red-400/30'
                 }`}>
                   Bus {activeMapAlert.busNumber} AI Detection
                 </span>
-                <span className="text-[10px] text-gray-400">{activeMapAlert.timestamp}</span>
+                <span className="text-[9px] text-gray-400">{activeMapAlert.timestamp}</span>
               </div>
               <h4 className="font-bold text-xs text-gray-100 truncate mt-0.5">{activeMapAlert.title}</h4>
-              <p className="text-[11px] text-gray-400 truncate">{activeMapAlert.location}</p>
+              <p className="text-[10px] text-gray-400 truncate">{activeMapAlert.location}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 text-xs text-gray-400 shrink-0 font-semibold bg-gray-800/80 px-2 py-1 rounded-lg border border-gray-700">
-            <span>Ticket Created</span>
-            <ChevronRight className="w-3.5 h-3.5" />
+          <div className="flex items-center gap-1 text-[11px] text-gray-400 shrink-0 font-semibold bg-gray-800/80 px-2 py-1 rounded-lg border border-gray-700">
+            <span>Ticket Sync</span>
+            <ChevronRight className="w-3 h-3" />
           </div>
         </div>
       )}

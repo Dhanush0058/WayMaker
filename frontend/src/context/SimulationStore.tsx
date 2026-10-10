@@ -382,7 +382,7 @@ export const SimulationStoreProvider: React.FC<{ children: React.ReactNode }> = 
     return () => clearInterval(motionInterval);
   }, []);
 
-  // 2. Periodic incident detection trigger: Reliable 10-second timer using busesRef (never gets reset by bus movement)
+  // 2. Periodic incident detection trigger: 15-second cycle using busesRef (never gets reset by bus movement)
   useEffect(() => {
     const incidentTypes: ('POTHOLE' | 'NO_HELMET' | 'GARBAGE' | 'ROAD_DAMAGE')[] = [
       'POTHOLE',
@@ -391,16 +391,16 @@ export const SimulationStoreProvider: React.FC<{ children: React.ReactNode }> = 
       'ROAD_DAMAGE',
     ];
 
-    // Initial alert after 2 seconds on app load so user sees it immediately
+    // Initial alert after 2.5 seconds on app load so user sees it immediately
     const initialTimeout = setTimeout(() => {
       triggerManualIncident('POTHOLE');
-    }, 2000);
+    }, 2500);
 
-    // Recurring alert every 10 seconds
+    // Recurring alert every 15 seconds
     const incidentTimer = setInterval(() => {
       const chosenType = incidentTypes[Math.floor(Math.random() * incidentTypes.length)];
       triggerManualIncident(chosenType);
-    }, 10000);
+    }, 15000); // 15 seconds cycle
 
     return () => {
       clearTimeout(initialTimeout);
