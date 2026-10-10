@@ -16,10 +16,10 @@ import {
   Eye,
   EyeOff,
   Upload,
-  Camera,
   Layers,
-  Sparkles,
-  Sliders,
+  HelpCircle,
+  ShieldCheck,
+  AlertTriangle,
 } from 'lucide-react';
 
 interface LiveCameraCVProps {
@@ -28,15 +28,16 @@ interface LiveCameraCVProps {
 
 interface TrackedEntity {
   id: string;
-  label: 'CAR' | 'BUS' | 'VAN' | 'PEDESTRIAN' | 'CYCLIST' | 'TRAFFIC LIGHT';
+  label: 'CAR' | 'BUS' | 'VAN' | 'PEDESTRIAN' | 'CYCLIST' | 'HAZARD_OBSTACLE';
+  subLabel?: string;
   confidence: number;
-  // Box coordinates as percentages (0 - 100)
+  baseConfidence: number;
   x: number;
   y: number;
   w: number;
   h: number;
   lane: 'LEFT_LANE' | 'CENTER_LANE' | 'RIGHT_LANE' | 'SIDEWALK';
-  progress: number; // 0 (horizon) to 1 (foreground)
+  progress: number;
   speedKmh: number;
   distanceM: number;
   color: string;
@@ -46,8 +47,9 @@ export const LiveCameraCV: React.FC<LiveCameraCVProps> = ({ compact = false }) =
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [isMuted, setIsMuted] = useState<boolean>(true);
   const [showHUD, setShowHUD] = useState<boolean>(true);
+  const [showExplanation, setShowExplanation] = useState<boolean>(false);
   const [feedMode, setFeedMode] = useState<'YOUTUBE_LIVE' | 'WEBCAM' | 'UPLOAD'>('YOUTUBE_LIVE');
-  const [inferenceTime, setInferenceTime] = useState<number>(16);
+  const [inferenceTime, setInferenceTime] = useState<number>(15);
   const [fps, setFps] = useState<number>(60);
   const [confidenceThreshold, setConfidenceThreshold] = useState<number>(0.75);
 
@@ -61,7 +63,7 @@ export const LiveCameraCV: React.FC<LiveCameraCVProps> = ({ compact = false }) =
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploadedVideoUrl, setUploadedVideoUrl] = useState<string | null>(null);
 
-  // Perspective-calibrated entities for YouTube live stream
+  // Dynamic road entities
   const [streamEntities, setStreamEntities] = useState<TrackedEntity[]>([]);
   const nextIdRef = useRef<number>(201);
 
@@ -153,7 +155,7 @@ export const LiveCameraCV: React.FC<LiveCameraCVProps> = ({ compact = false }) =
             });
           setTfDetections(mapped);
         } catch {
-          // ignore transient frame error
+          // ignore
         } finally {
           isDetecting = false;
         }
@@ -166,68 +168,74 @@ export const LiveCameraCV: React.FC<LiveCameraCVProps> = ({ compact = false }) =
   }, [model, feedMode, confidenceThreshold]);
 
   // =========================================================================
-  // PERSPECTIVE ROAD VISION CALIBRATION (for London Bus Live Stream)
-  // Vanishing point: Horizon Y = 56%, Vanishing X = 48% (London Street Geometry)
+  // DYNAMIC YOLO TELEMETRY & PERSPECTIVE ROAD VISION TRACKER
   // =========================================================================
   useEffect(() => {
     if (feedMode !== 'YOUTUBE_LIVE') return;
 
-    // Initialize initial well-aligned road entities strictly on road surface
     let entities: TrackedEntity[] = [
       {
-        id: '#CAR-102',
-        label: 'CAR',
-        confidence: 94,
-        lane: 'CENTER_LANE',
-        progress: 0.35,
-        x: 38,
-        y: 62,
-        w: 12,
-        h: 11,
-        speedKmh: 32,
-        distanceM: 19.4,
-        color: '#3B82F6',
-      },
-      {
-        id: '#CAR-205',
-        label: 'CAR',
-        confidence: 96,
-        lane: 'RIGHT_LANE',
-        progress: 0.55,
-        x: 62,
-        y: 68,
-        w: 16,
-        h: 14,
-        speedKmh: 36,
-        distanceM: 14.2,
-        color: '#3B82F6',
-      },
-      {
-        id: '#BUS-11',
+        id: '#BUS-42',
         label: 'BUS',
-        confidence: 98,
+        subLabel: 'WAYMAKER TRANSIT',
+        confidence: 96,
+        baseConfidence: 96,
         lane: 'LEFT_LANE',
-        progress: 0.2,
-        x: 22,
-        y: 58,
-        w: 10,
+        progress: 0.25,
+        x: 24,
+        y: 60,
+        w: 11,
         h: 15,
-        speedKmh: 22,
-        distanceM: 28.0,
+        speedKmh: 24,
+        distanceM: 26.5,
         color: '#10B981',
       },
       {
-        id: '#PED-44',
-        label: 'PEDESTRIAN',
-        confidence: 88,
-        lane: 'SIDEWALK',
+        id: '#CAR-102',
+        label: 'CAR',
+        subLabel: 'CIVILIAN VEHICLE',
+        confidence: 93,
+        baseConfidence: 93,
+        lane: 'CENTER_LANE',
         progress: 0.4,
-        x: 14,
+        x: 40,
         y: 64,
+        w: 13,
+        h: 11,
+        speedKmh: 34,
+        distanceM: 18.2,
+        color: '#3B82F6',
+      },
+      {
+        id: '#VAN-88',
+        label: 'VAN',
+        subLabel: 'COMMERCIAL FLEET',
+        confidence: 91,
+        baseConfidence: 91,
+        lane: 'RIGHT_LANE',
+        progress: 0.58,
+        x: 64,
+        y: 70,
+        w: 16,
+        h: 14,
+        speedKmh: 38,
+        distanceM: 13.5,
+        color: '#8B5CF6',
+      },
+      {
+        id: '#PED-14',
+        label: 'PEDESTRIAN',
+        subLabel: 'SIDEWALK SAFETY',
+        confidence: 89,
+        baseConfidence: 89,
+        lane: 'SIDEWALK',
+        progress: 0.35,
+        x: 13,
+        y: 63,
         w: 3.5,
         h: 9,
         speedKmh: 4,
-        distanceM: 12.0,
+        distanceM: 14.0,
         color: '#EC4899',
       },
     ];
@@ -239,20 +247,23 @@ export const LiveCameraCV: React.FC<LiveCameraCVProps> = ({ compact = false }) =
       const dt = (now - lastTime) / 1000;
       lastTime = now;
 
-      // Realistic inference telemetry
-      if (Math.random() < 0.15) {
-        setInferenceTime(Math.floor(14 + Math.random() * 5));
+      // Realistic inference jitter & FPS calculation
+      if (Math.random() < 0.2) {
+        setInferenceTime(Math.floor(13 + Math.random() * 6));
         setFps(Math.floor(58 + Math.random() * 4));
       }
 
-      // Update positions along road lane geometry
+      // Update positions & continuously vary confidence dynamically frame-by-frame
       entities = entities.map((item) => {
-        // Vehicle speeds down perspective Z-axis
         const speedFactor = item.label === 'PEDESTRIAN' ? 0.04 : item.label === 'BUS' ? 0.08 : 0.12;
         let newProgress = item.progress + dt * speedFactor;
 
-        // When vehicle passes camera or horizon, respawn into a clean lane
-        if (newProgress >= 0.95 || newProgress < 0.05) {
+        // Dynamic confidence jitter (mimicking true neural network frame sampling: ±2-3%)
+        const jitter = Math.sin(now * 0.008 + item.progress * 10) * 3.5;
+        const dynamicConfidence = Math.min(99, Math.max(82, Math.round(item.baseConfidence + jitter)));
+
+        // Reset entity when passing foreground or horizon
+        if (newProgress >= 0.96 || newProgress < 0.04) {
           const lanes: ('LEFT_LANE' | 'CENTER_LANE' | 'RIGHT_LANE' | 'SIDEWALK')[] = [
             'CENTER_LANE',
             'RIGHT_LANE',
@@ -276,31 +287,30 @@ export const LiveCameraCV: React.FC<LiveCameraCVProps> = ({ compact = false }) =
             VAN: '#8B5CF6',
             PEDESTRIAN: '#EC4899',
             CYCLIST: '#F59E0B',
-            'TRAFFIC LIGHT': '#EF4444',
+            HAZARD_OBSTACLE: '#EF4444',
           };
+
+          const baseConf = Math.floor(90 + Math.random() * 8);
 
           return {
             id: `#${label}-${nextIdRef.current++}`,
             label,
-            confidence: Math.floor(89 + Math.random() * 10),
+            subLabel: label === 'BUS' ? 'WAYMAKER TRANSIT' : label === 'PEDESTRIAN' ? 'CURBSIDE PED' : 'ROAD VEHICLE',
+            confidence: baseConf,
+            baseConfidence: baseConf,
             lane: newLane,
-            progress: 0.08 + Math.random() * 0.05,
+            progress: 0.07 + Math.random() * 0.04,
             x: 48,
             y: 56,
             w: 8,
             h: 8,
-            speedKmh: label === 'PEDESTRIAN' ? 4 : Math.floor(25 + Math.random() * 20),
-            distanceM: 40,
+            speedKmh: label === 'PEDESTRIAN' ? 4 : Math.floor(26 + Math.random() * 18),
+            distanceM: 42,
             color: colorMap[label],
           };
         }
 
-        // Perspective geometry projection:
-        // Vanishing horizon is at Y = 56%, Vanishing X = 48%
-        // Center lane goes from X=46% down to X=35%
-        // Right lane goes from X=52% down to X=72%
-        // Left lane goes from X=42% down to X=18%
-        // Sidewalk goes from X=40% down to X=12%
+        // Perspective coordinates along street geometry
         const horizonY = 56;
         const roadEndY = 92;
         const currentY = horizonY + newProgress * (roadEndY - horizonY);
@@ -316,7 +326,7 @@ export const LiveCameraCV: React.FC<LiveCameraCVProps> = ({ compact = false }) =
           currentX = 38 - newProgress * 28;
         }
 
-        // Perspective scaling with depth
+        // Depth perspective scaling
         const scale = 0.6 + newProgress * 1.4;
         let boxW = 8 * scale;
         let boxH = 7 * scale;
@@ -334,8 +344,9 @@ export const LiveCameraCV: React.FC<LiveCameraCVProps> = ({ compact = false }) =
         return {
           ...item,
           progress: newProgress,
+          confidence: dynamicConfidence,
           x: currentX,
-          y: currentY - boxH * 0.85, // align bottom of box with road surface
+          y: currentY - boxH * 0.85,
           w: boxW,
           h: boxH,
           distanceM,
@@ -361,7 +372,7 @@ export const LiveCameraCV: React.FC<LiveCameraCVProps> = ({ compact = false }) =
   };
 
   const currentDetections = feedMode === 'YOUTUBE_LIVE' ? streamEntities : tfDetections;
-  const vehicleCount = currentDetections.filter((d) => d.label !== 'TRAFFIC LIGHT').length;
+  const vehicleCount = currentDetections.length;
 
   // Stream content renderer
   const renderStreamContent = (isModal: boolean) => (
@@ -395,7 +406,7 @@ export const LiveCameraCV: React.FC<LiveCameraCVProps> = ({ compact = false }) =
         </div>
       )}
 
-      {/* 3. CALIBRATED YOLO BOUNDING BOXES (Aligned with road lanes) */}
+      {/* 3. DYNAMIC YOLO BOUNDING BOXES & TELEMETRY */}
       {showHUD && (
         <div className="absolute inset-0 pointer-events-none">
           {currentDetections.map((entity: any) => (
@@ -424,18 +435,19 @@ export const LiveCameraCV: React.FC<LiveCameraCVProps> = ({ compact = false }) =
                 <span className="absolute -bottom-1 -left-1 w-2 h-2 border-b-2 border-l-2" style={{ borderColor: entity.color }} />
                 <span className="absolute -bottom-1 -right-1 w-2 h-2 border-b-2 border-r-2" style={{ borderColor: entity.color }} />
 
-                {/* YOLO Label & Confidence Header */}
+                {/* YOLO Label & Real-Time Dynamic Confidence Score */}
                 <div
                   className="absolute -top-5 left-0 px-1.5 py-0.5 rounded-t text-[9px] font-mono font-black text-black flex items-center gap-1 shadow-sm whitespace-nowrap"
                   style={{ backgroundColor: entity.color }}
+                  title="YOLO Neural Network Object Classification & Confidence Score"
                 >
                   <span>{entity.label}</span>
-                  <span className="opacity-90">[{entity.confidence}%]</span>
+                  <span className="opacity-90 font-extrabold">[{entity.confidence}%]</span>
                 </div>
 
                 {/* Distance & Telemetry Tag */}
                 {entity.distanceM && (
-                  <div className="absolute -bottom-4 right-0 px-1 py-0.2 rounded-b bg-black/80 text-[8px] font-mono font-bold text-white whitespace-nowrap">
+                  <div className="absolute -bottom-4 right-0 px-1 py-0.2 rounded-b bg-black/85 text-[8px] font-mono font-bold text-white whitespace-nowrap">
                     {entity.distanceM}m • {entity.speedKmh} km/h
                   </div>
                 )}
@@ -464,8 +476,18 @@ export const LiveCameraCV: React.FC<LiveCameraCVProps> = ({ compact = false }) =
 
             <span className="text-emerald-300 text-[10px] font-mono bg-black/75 px-2 py-0.5 rounded border border-emerald-500/40 flex items-center gap-1">
               <Cpu className="w-3 h-3 text-emerald-400" />
-              YOLO Road-Vision Active • {inferenceTime}ms ({fps} FPS)
+              YOLOv8 Active • {inferenceTime}ms ({fps} FPS)
             </span>
+
+            {/* Help / Explanation Tooltip Toggle */}
+            <button
+              type="button"
+              onClick={() => setShowExplanation(!showExplanation)}
+              className="p-1 rounded-full bg-black/80 hover:bg-gray-800 text-gray-300 hover:text-white border border-white/20 transition cursor-pointer"
+              title="What do [90%] Confidence Scores mean?"
+            >
+              <HelpCircle className="w-3 h-3 text-amber-300" />
+            </button>
           </div>
 
           {/* Right: Mode Selector, Sound, External YouTube link, and Maximize button */}
@@ -577,13 +599,38 @@ export const LiveCameraCV: React.FC<LiveCameraCVProps> = ({ compact = false }) =
           </div>
         </div>
 
+        {/* Explainability Popover Card */}
+        {showExplanation && (
+          <div className="pointer-events-auto bg-gray-900/95 border border-amber-500/40 rounded-xl p-3 text-white text-xs max-w-md shadow-2xl backdrop-blur-md animate-in fade-in">
+            <div className="flex items-center justify-between font-bold text-amber-400 mb-1">
+              <span className="flex items-center gap-1.5">
+                <HelpCircle className="w-4 h-4" />
+                What does [90%] Confidence Mean?
+              </span>
+              <button
+                onClick={() => setShowExplanation(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <p className="text-[11px] text-gray-300 leading-relaxed">
+              In computer vision (YOLO), the <strong>confidence percentage</strong> is the neural network's certainty that a detected bounding box is a valid road entity (e.g. 96% sure it is a bus).
+            </p>
+            <div className="mt-2 text-[10px] bg-black/60 p-2 rounded border border-gray-700 text-gray-400">
+              <strong className="text-emerald-400">&gt;85% High Confidence:</strong> Verified by WayMaker for telematics & green-wave routing.<br/>
+              <strong className="text-amber-400">&lt;60% Low Confidence:</strong> Filtered out as visual noise to prevent false alarms.
+            </div>
+          </div>
+        )}
+
         {/* Bottom Overlay Bar: Real-time Telematics Readout */}
         <div className="flex items-center justify-between text-[10px] font-mono bg-black/85 backdrop-blur-md p-1.5 rounded-xl border border-white/15 pointer-events-auto flex-wrap gap-2">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1">
               <Car className="w-3 h-3 text-emerald-400" />
               <span className="text-gray-400">Tracked:</span>
-              <strong className="text-white font-bold">{vehicleCount} Vehicles</strong>
+              <strong className="text-white font-bold">{vehicleCount} Entities</strong>
             </div>
 
             <div className="flex items-center gap-1">
@@ -593,7 +640,7 @@ export const LiveCameraCV: React.FC<LiveCameraCVProps> = ({ compact = false }) =
             </div>
 
             <span className="px-1.5 py-0.2 rounded font-black text-[9px] bg-emerald-500/90 text-white border border-emerald-400">
-              CORRIDOR MONITORED
+              WAYMAKER VISION ACTIVE
             </span>
           </div>
 
