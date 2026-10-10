@@ -392,7 +392,7 @@ export const SimulationStoreProvider: React.FC<{ children: React.ReactNode }> = 
       ];
       const chosenType = incidentTypes[Math.floor(Math.random() * incidentTypes.length)];
       triggerManualIncident(chosenType);
-    }, 14000);
+    }, 7500);
 
     return () => clearInterval(incidentTimer);
   }, [buses]);

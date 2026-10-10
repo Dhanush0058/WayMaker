@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Plus, Minus, Layers, AlertTriangle, Eye, ShieldAlert, Bus } from 'lucide-react';
+import { Plus, Minus, Layers, AlertTriangle, Eye, ShieldAlert, Bus, ChevronRight, X } from 'lucide-react';
 import { useSimulationStore, BusRouteInfo, MapAlertNotification } from '../context/SimulationStore';
 
 interface LiveMapProps {
-  onSelectHazard?: (hazardId: string) => void;
+  onSelectHazard?: (hazardId?: string) => void;
 }
 
 export const LiveMap: React.FC<LiveMapProps> = ({ onSelectHazard }) => {
@@ -63,7 +63,7 @@ export const LiveMap: React.FC<LiveMapProps> = ({ onSelectHazard }) => {
     tileLayerRef.current = newTile;
   }, [mapType]);
 
-  // 3. Update 6 Moving Indian Transit Buses on the Map (Pixel-Perfect GPS Anchoring)
+  // 3. Update 6 Moving Indian Transit Buses on the Map
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
@@ -72,7 +72,7 @@ export const LiveMap: React.FC<LiveMapProps> = ({ onSelectHazard }) => {
       const isAlert = bus.status === 'HAZARD_ALERT';
       const bgColor = isAlert ? '#DC2626' : isStopped ? '#D97706' : '#16A34A';
 
-      // Pixel-perfect bottom-anchored pin with zero CSS transform conflicts
+      // Bottom-anchored pin with zero CSS transform conflicts
       const customIcon = L.divIcon({
         className: 'bus-pin-wrapper',
         html: `
@@ -120,7 +120,7 @@ export const LiveMap: React.FC<LiveMapProps> = ({ onSelectHazard }) => {
           </div>
         `,
         iconSize: [80, 32],
-        iconAnchor: [40, 32], // Bottom-center anchored exactly to GPS lat/lng
+        iconAnchor: [40, 32],
       });
 
       if (busMarkersRef.current[bus.id]) {
@@ -134,80 +134,77 @@ export const LiveMap: React.FC<LiveMapProps> = ({ onSelectHazard }) => {
     });
   }, [buses]);
 
-  // 4. Render Active 2.5s Auto-Fading Alert Popup on Map
+  // 4. Render Map Layer Pulsing Ring for Active Alert
   useEffect(() => {
     alertLayerGroup.current.clearLayers();
     if (!activeMapAlert || !mapInstanceRef.current) return;
 
-    const alertIcon = L.divIcon({
-      className: 'map-alert-popup-wrapper',
+    const ringIcon = L.divIcon({
+      className: 'map-alert-pulse-ring',
       html: `
         <div style="
-          width: 240px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        ">
-          <div style="
-            background: #111827;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 10px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.35);
-            border: 2px solid ${activeMapAlert.type === 'NO_HELMET' ? '#3B82F6' : '#DC2626'};
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            white-space: nowrap;
-          ">
-            <div style="
-              width: 20px;
-              height: 20px;
-              border-radius: 50%;
-              background: ${activeMapAlert.type === 'NO_HELMET' ? '#3B82F6' : '#DC2626'};
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-size: 11px;
-              font-weight: bold;
-            ">
-              ${activeMapAlert.type === 'NO_HELMET' ? '🛵' : '⚠️'}
-            </div>
-            <div>
-              <div style="font-size: 11px; font-weight: 800; color: #F9FAFB;">
-                ${activeMapAlert.title}
-              </div>
-              <div style="font-size: 10px; color: #9CA3AF;">
-                Reported by Bus ${activeMapAlert.busNumber} • ${activeMapAlert.location}
-              </div>
-            </div>
-          </div>
-          <div style="
-            width: 0;
-            height: 0;
-            border-left: 5px solid transparent;
-            border-right: 5px solid transparent;
-            border-top: 5px solid #111827;
-            margin-top: -1px;
-          "></div>
-        </div>
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          border: 3px solid ${activeMapAlert.type === 'NO_HELMET' ? '#3B82F6' : '#DC2626'};
+          background: ${activeMapAlert.type === 'NO_HELMET' ? 'rgba(59,130,246,0.2)' : 'rgba(220,38,38,0.2)'};
+          animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+        "></div>
       `,
-      iconSize: [240, 54],
-      iconAnchor: [120, 54],
+      iconSize: [40, 40],
+      iconAnchor: [20, 20],
     });
 
-    const alertMarker = L.marker([activeMapAlert.lat, activeMapAlert.lng], {
-      icon: alertIcon,
-      zIndexOffset: 1000,
+    const ringMarker = L.marker([activeMapAlert.lat, activeMapAlert.lng], {
+      icon: ringIcon,
+      zIndexOffset: 999,
     });
 
-    alertMarker.addTo(alertLayerGroup.current);
+    ringMarker.addTo(alertLayerGroup.current);
   }, [activeMapAlert]);
 
   return (
     <div className="relative w-full h-full select-none">
       {/* Leaflet Map Div */}
       <div ref={mapContainerRef} className="w-full h-full z-0" />
+
+      {/* TOP-CENTER DYNAMIC 2.5s POPUP ALERT TOAST (Auto-Dismissing Banner) */}
+      {activeMapAlert && (
+        <div
+          onClick={() => onSelectHazard?.()}
+          className="absolute top-4 left-1/2 -translate-x-1/2 z-500 max-w-md w-[90%] bg-gray-950/95 text-white p-3.5 rounded-2xl shadow-2xl border border-gray-700 flex items-center justify-between gap-3 animate-in slide-in-from-top-4 duration-300 backdrop-blur-md cursor-pointer hover:border-gray-500 transition"
+          title="Click to view ticket dossier"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 font-bold ${
+              activeMapAlert.type === 'NO_HELMET'
+                ? 'bg-blue-600/30 text-blue-400 border border-blue-500/40'
+                : 'bg-red-600/30 text-red-400 border border-red-500/40'
+            }`}>
+              {activeMapAlert.type === 'NO_HELMET' ? '🛵' : '⚠️'}
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className={`text-[10px] font-bold uppercase px-1.5 py-0.2 rounded border ${
+                  activeMapAlert.type === 'NO_HELMET'
+                    ? 'bg-blue-500/20 text-blue-300 border-blue-400/30'
+                    : 'bg-red-500/20 text-red-300 border-red-400/30'
+                }`}>
+                  Bus {activeMapAlert.busNumber} AI Detection
+                </span>
+                <span className="text-[10px] text-gray-400">{activeMapAlert.timestamp}</span>
+              </div>
+              <h4 className="font-bold text-xs text-gray-100 truncate mt-0.5">{activeMapAlert.title}</h4>
+              <p className="text-[11px] text-gray-400 truncate">{activeMapAlert.location}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 text-xs text-gray-400 shrink-0 font-semibold bg-gray-800/80 px-2 py-1 rounded-lg border border-gray-700">
+            <span>Ticket Created</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </div>
+        </div>
+      )}
 
       {/* Floating Map Controls (Top-Right) */}
       <div className="absolute top-4 right-4 z-400 flex flex-col gap-2">
