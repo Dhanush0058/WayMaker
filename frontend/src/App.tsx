@@ -1,17 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { TopHeader } from './components/TopHeader';
 import { Sidebar } from './components/Sidebar';
-import { MetricCards } from './components/MetricCards';
 import { ScenarioBar } from './components/ScenarioBar';
 import { LiveMap } from './components/LiveMap';
-import { RightSidebar } from './components/RightSidebar';
 import { EvaluationMetricsModal } from './components/EvaluationMetricsModal';
 
-// Cleaned core views
-import { IncidentsView } from './components/views/IncidentsView';
+// Cleaned 4 core platform views
+import { TicketsView } from './components/views/TicketsView';
 import { BusesView } from './components/views/BusesView';
-import { AmbulancesView } from './components/views/AmbulancesView';
-import { SignalsView } from './components/views/SignalsView';
 import { AnalyticsView } from './components/views/AnalyticsView';
 
 import { SnapshotData } from './types';
@@ -111,20 +107,16 @@ export const App: React.FC = () => {
   const handleTriggerSecondaryAccident = () => handleApiAction('/api/simulation/secondary-accident');
   const handleDispatchAmbulance = () => handleApiAction('/api/ambulances/dispatch');
 
-  const handleVerifyHazard = (hazardId: string, status: string) => {
-    handleApiAction(`/api/hazards/${hazardId}/verify`, 'POST', { status });
-  };
-
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-gray-900 flex flex-col font-sans select-none">
-      {/* Streamlined Top Header */}
+      {/* Top Header */}
       <TopHeader
         summary={data?.summary}
         isConnected={isConnected}
         onOpenMetrics={() => setIsMetricsOpen(true)}
       />
 
-      {/* Main Container: 3-column Layout */}
+      {/* Main Container: Full Width & Height */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left: Streamlined Sidebar with dynamic live events */}
         <Sidebar
@@ -133,13 +125,10 @@ export const App: React.FC = () => {
           events={data?.events ?? []}
         />
 
-        {/* Center: Dynamic View Area */}
+        {/* Center: Dynamic View Area (Full screen width) */}
         <main className="flex-1 p-5 overflow-y-auto space-y-4">
           {activeTab === 'live-map' && (
-            <>
-              {/* Summary Cards */}
-              <MetricCards summary={data?.summary} />
-
+            <div className="flex flex-col h-[calc(100vh-105px)] space-y-3">
               {/* Clean Scenario Control Bar */}
               <ScenarioBar
                 simulationState={data?.summary.simulation_state ?? 'IDLE'}
@@ -152,22 +141,23 @@ export const App: React.FC = () => {
                 onTriggerSecondaryAccident={handleTriggerSecondaryAccident}
               />
 
-              {/* Live Interactive GIS Map */}
-              <LiveMap
-                vehicles={data?.vehicles ?? []}
-                hazards={data?.hazards ?? []}
-                signals={data?.signals ?? []}
-                ambulance={data?.ambulance}
-                segments={data?.segments ?? []}
-                onSelectHazard={() => setActiveTab('incidents')}
-              />
-            </>
+              {/* Full-Width Live GIS Map */}
+              <div className="flex-1 min-h-0 rounded-2xl overflow-hidden border border-gray-200 shadow-xs">
+                <LiveMap
+                  vehicles={data?.vehicles ?? []}
+                  hazards={data?.hazards ?? []}
+                  signals={data?.signals ?? []}
+                  ambulance={data?.ambulance}
+                  segments={data?.segments ?? []}
+                  onSelectHazard={() => setActiveTab('tickets')}
+                />
+              </div>
+            </div>
           )}
 
-          {activeTab === 'incidents' && (
-            <IncidentsView
+          {activeTab === 'tickets' && (
+            <TicketsView
               hazards={data?.hazards ?? []}
-              onVerifyHazard={handleVerifyHazard}
               onTriggerWaterBreak={handleTriggerWaterBreak}
             />
           )}
@@ -180,35 +170,10 @@ export const App: React.FC = () => {
             />
           )}
 
-          {activeTab === 'ambulances' && (
-            <AmbulancesView
-              ambulance={data?.ambulance}
-              onDispatch={handleDispatchAmbulance}
-              onSecondaryAccident={handleTriggerSecondaryAccident}
-            />
-          )}
-
-          {activeTab === 'signals' && (
-            <SignalsView signals={data?.signals ?? []} />
-          )}
-
           {activeTab === 'analytics' && (
             <AnalyticsView metrics={data?.metrics} />
           )}
         </main>
-
-        {/* Right: Selected Ambulance & Hazard Information Cards */}
-        {activeTab === 'live-map' && (
-          <div className="p-5 pl-0 hidden xl:block">
-            <RightSidebar
-              ambulance={data?.ambulance}
-              hazards={data?.hazards ?? []}
-              onDispatch={handleDispatchAmbulance}
-              onVerifyHazard={handleVerifyHazard}
-              onFocusMap={() => console.log('Focus map')}
-            />
-          </div>
-        )}
       </div>
 
       {/* Evaluation & Benchmark Metrics Modal */}

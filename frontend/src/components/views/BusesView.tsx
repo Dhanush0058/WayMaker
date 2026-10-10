@@ -1,173 +1,271 @@
-import React from 'react';
-import { Bus, Navigation, AlertTriangle, CheckCircle, Radio, Gauge } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  Bus,
+  Activity,
+  Video,
+  MapPin,
+  Clock,
+  Gauge,
+  User,
+  Search,
+  CheckCircle,
+  AlertTriangle,
+  X,
+  Maximize2,
+} from 'lucide-react';
 import { VehicleEvent } from '../../types';
 import { LiveCameraCV } from '../LiveCameraCV';
 
 interface BusesViewProps {
-  vehicles: VehicleEvent[];
-  onTriggerFalseAlarm: () => void;
-  onTriggerWaterBreak: () => void;
+  vehicles?: VehicleEvent[];
+  onTriggerFalseAlarm?: () => void;
+  onTriggerWaterBreak?: () => void;
+}
+
+interface BusFleetItem {
+  id: string;
+  routeNumber: string;
+  routeName: string;
+  driverName: string;
+  speedKmh: number;
+  status: 'ACTIVE_NORMAL' | 'TRANSIT_STOP' | 'HAZARD_DETECTED' | 'DELAYED';
+  location: string;
+  lastUpdated: string;
+  occupancy: string;
+  hasLiveStream: boolean;
 }
 
 export const BusesView: React.FC<BusesViewProps> = ({
-  vehicles,
+  vehicles = [],
   onTriggerFalseAlarm,
   onTriggerWaterBreak,
 }) => {
-  const busFleet = [
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [activeStreamBus, setActiveStreamBus] = useState<BusFleetItem | null>(null);
+
+  const fleetList: BusFleetItem[] = [
     {
-      vehicle_id: 'Bus 42',
-      route_name: 'Line 5 — Banjara to Begumpet Express',
-      speed: 0,
-      status: 'stopped',
-      location: '5th Avenue & Banjara Hills',
-      anomaly: 'Sudden Deceleration 35 → 0 km/h (Pothole Detected)',
-      driver: 'R. Sharma',
-      battery: '94%',
-      telemetry_rate: '1 Hz Live',
+      id: 'BUS-42',
+      routeNumber: 'Route 42-EX',
+      routeName: 'Somajiguda & 5th Avenue Express',
+      driverName: 'K. Raghavan',
+      speedKmh: 44,
+      status: 'HAZARD_DETECTED',
+      location: '5th Avenue • Corridor Sector 3',
+      lastUpdated: '10s ago',
+      occupancy: '38 / 52 Seats',
+      hasLiveStream: true,
     },
     {
-      vehicle_id: 'Bus 18',
-      route_name: 'Line 2 — Tolichowki to Mehdipatnam',
-      speed: 32,
-      status: 'normal',
-      location: 'MG Road Transit Corridor',
-      anomaly: null,
-      driver: 'A. Kumar',
-      battery: '88%',
-      telemetry_rate: '1 Hz Live',
+      id: 'BUS-18',
+      routeNumber: 'Route 18-C',
+      routeName: 'Banjara Hills & City Center Loop',
+      driverName: 'M. Suresh',
+      speedKmh: 28,
+      status: 'TRANSIT_STOP',
+      location: 'Banjara Hills Rd No. 12',
+      lastUpdated: 'Just now',
+      occupancy: '44 / 52 Seats',
+      hasLiveStream: true,
     },
     {
-      vehicle_id: 'Bus 27',
-      route_name: 'Line 8 — Somajiguda Lake Loop',
-      speed: 38,
-      status: 'normal',
-      location: 'Necklace Road Shoreline',
-      anomaly: null,
-      driver: 'K. Rao',
-      battery: '91%',
-      telemetry_rate: '1 Hz Live',
+      id: 'BUS-07',
+      routeNumber: 'Route 07-N',
+      routeName: 'Greenlands Flyover & Secunderabad',
+      driverName: 'P. Venkat',
+      speedKmh: 52,
+      status: 'ACTIVE_NORMAL',
+      location: 'Greenlands Flyover North',
+      lastUpdated: '25s ago',
+      occupancy: '22 / 52 Seats',
+      hasLiveStream: true,
     },
     {
-      vehicle_id: 'Patrol 09',
-      route_name: 'Municipal Inspection Unit 9',
-      speed: 40,
-      status: 'normal',
-      location: 'Khairatabad Outer Arterial',
-      anomaly: null,
-      driver: 'Unit 9 Officer',
-      battery: '96%',
-      telemetry_rate: '1 Hz Live',
+      id: 'BUS-29',
+      routeNumber: 'Route 29-A',
+      routeName: 'MG Road Trunk Line',
+      driverName: 'T. Narsimha',
+      speedKmh: 36,
+      status: 'ACTIVE_NORMAL',
+      location: 'MG Road Central Terminal',
+      lastUpdated: '1m ago',
+      occupancy: '48 / 52 Seats',
+      hasLiveStream: true,
+    },
+    {
+      id: 'BUS-14',
+      routeNumber: 'Route 14-S',
+      routeName: 'Hussain Sagar Lakefront Line',
+      driverName: 'G. Srinivas',
+      speedKmh: 30,
+      status: 'ACTIVE_NORMAL',
+      location: 'Tank Bund Roadway',
+      lastUpdated: '40s ago',
+      occupancy: '19 / 52 Seats',
+      hasLiveStream: true,
+    },
+    {
+      id: 'BUS-33',
+      routeNumber: 'Route 33-M',
+      routeName: 'Medical District Shuttle',
+      driverName: 'D. Naidu',
+      speedKmh: 41,
+      status: 'ACTIVE_NORMAL',
+      location: 'Hospital Corridor Junction',
+      lastUpdated: '15s ago',
+      occupancy: '30 / 52 Seats',
+      hasLiveStream: true,
     },
   ];
 
+  const filteredFleet = fleetList.filter(
+    (b) =>
+      b.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      b.routeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      b.driverName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <div className="space-y-4">
-      {/* View Header */}
-      <div className="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-xs flex items-center justify-between flex-wrap gap-4">
+    <div className="space-y-5">
+      {/* Top Header & Search */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5 flex items-center justify-between flex-wrap gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-black text-gray-900">City Transit Fleet Telematics</h2>
-            <span className="bg-[#EBF8EE] text-[#16A34A] border border-[#BBF7D0] px-2.5 py-0.5 rounded-full font-bold text-xs flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A] animate-pulse"></span>
-              42 Connected City Buses
-            </span>
-          </div>
-          <p className="text-xs text-gray-500 mt-1">
-            Real-time GPS tracking, accelerometer telemetry, passenger boarding geofence verification, and hazard alerts.
+          <h2 className="text-xl font-bold text-gray-900 tracking-tight">Public Transit Fleet & Telematics</h2>
+          <p className="text-xs text-gray-500 font-normal mt-0.5">
+            Real-time GPS telematics, speed monitoring, and AI onboard camera live streams.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onTriggerWaterBreak}
-            className="px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs transition cursor-pointer"
-          >
-            Simulate Bus 42 Sudden Halt
-          </button>
-          <button
-            onClick={onTriggerFalseAlarm}
-            className="px-3.5 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-xs transition border border-gray-250 cursor-pointer"
-          >
-            Simulate Scheduled Bus Stop
-          </button>
+        {/* Search */}
+        <div className="relative w-72">
+          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search bus number, route, driver..."
+            className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#16A34A] transition"
+          />
         </div>
       </div>
 
-      {/* Live YouTube Bus Camera Feed with AI Traffic CV */}
-      <LiveCameraCV compact={false} />
-
-      {/* Fleet Telematics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {busFleet.map((bus) => {
-          const isAnomaly = !!bus.anomaly;
+      {/* Fleet Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredFleet.map((bus) => {
+          const isHazard = bus.status === 'HAZARD_DETECTED';
+          const isTransitStop = bus.status === 'TRANSIT_STOP';
 
           return (
             <div
-              key={bus.vehicle_id}
-              className={`bg-white rounded-2xl p-5 border transition shadow-xs hover:shadow-md flex flex-col justify-between ${
-                isAnomaly ? 'border-red-200 bg-red-50/20' : 'border-gray-200/80'
-              }`}
+              key={bus.id}
+              className="bg-white rounded-xl border border-gray-200 p-5 hover:border-gray-300 transition flex flex-col justify-between space-y-4 shadow-xs"
             >
+              {/* Card Header */}
               <div>
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center font-bold ${
-                      isAnomaly ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-[#EBF8EE] text-[#16A34A]'
-                    }`}>
-                      <Bus className="w-6 h-6" />
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-[#16A34A] flex items-center justify-center font-bold">
+                      <Bus className="w-4 h-4" />
                     </div>
                     <div>
-                      <h3 className="font-extrabold text-gray-900 text-sm">{bus.vehicle_id}</h3>
-                      <p className="text-xs text-gray-500 font-medium">{bus.route_name}</p>
+                      <h3 className="font-bold text-sm text-gray-900 leading-tight">{bus.id}</h3>
+                      <span className="text-[11px] text-gray-500 font-medium">{bus.routeNumber}</span>
                     </div>
                   </div>
 
-                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
-                    isAnomaly ? 'bg-red-600 text-white animate-pulse' : 'bg-emerald-100 text-emerald-800'
+                  <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${
+                    isHazard
+                      ? 'bg-red-50 text-red-600 border-red-200'
+                      : isTransitStop
+                      ? 'bg-amber-50 text-amber-700 border-amber-200'
+                      : 'bg-emerald-50 text-[#16A34A] border-emerald-200'
                   }`}>
-                    {isAnomaly ? 'ANOMALY DETECTED' : 'IN TRANSIT'}
+                    {bus.status.replace('_', ' ')}
                   </span>
                 </div>
 
-                {/* Speed & Stats */}
-                <div className="grid grid-cols-3 gap-2 p-3 rounded-xl bg-gray-50 border border-gray-150 mb-3 text-left">
-                  <div>
-                    <span className="text-[10px] text-gray-400 font-bold uppercase">Speed</span>
-                    <p className={`text-base font-black ${isAnomaly ? 'text-red-600' : 'text-gray-900'}`}>
-                      {bus.speed} km/h
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-gray-400 font-bold uppercase">Battery</span>
-                    <p className="text-base font-black text-gray-900">{bus.battery}</p>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-gray-400 font-bold uppercase">Stream</span>
-                    <p className="text-base font-black text-[#16A34A]">{bus.telemetry_rate}</p>
-                  </div>
-                </div>
-
-                <div className="text-xs text-gray-600 mb-2">
-                  <span className="font-bold text-gray-800">Current Corridor: </span>
-                  <span>{bus.location}</span>
-                </div>
-
-                {isAnomaly && (
-                  <div className="p-2.5 rounded-xl bg-red-100/70 border border-red-200 text-xs text-red-800 font-semibold mb-2">
-                    ⚠️ {bus.anomaly}
-                  </div>
-                )}
+                <p className="text-xs font-semibold text-gray-800">{bus.routeName}</p>
               </div>
 
-              <div className="pt-3 border-t border-gray-150 flex items-center justify-between text-xs text-gray-500">
-                <span>Driver: <strong className="text-gray-700">{bus.driver}</strong></span>
-                <span className="text-[#16A34A] font-bold">GPS Geofence: Active</span>
+              {/* Telematics Metrics */}
+              <div className="bg-gray-50 rounded-lg p-3 border border-gray-100 text-xs space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500 flex items-center gap-1.5">
+                    <Gauge className="w-3.5 h-3.5 text-gray-400" />
+                    Speed:
+                  </span>
+                  <strong className="font-mono font-bold text-gray-900">{bus.speedKmh} km/h</strong>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500 flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                    Location:
+                  </span>
+                  <span className="text-gray-800 font-medium truncate max-w-[150px]">{bus.location}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500 flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-gray-400" />
+                    Driver:
+                  </span>
+                  <span className="text-gray-800 font-medium">{bus.driverName}</span>
+                </div>
               </div>
+
+              {/* Click to open Live AI Camera Stream */}
+              <button
+                onClick={() => setActiveStreamBus(bus)}
+                className="w-full py-2.5 rounded-lg bg-gray-900 hover:bg-black text-white text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-2"
+              >
+                <Video className="w-4 h-4 text-emerald-400" />
+                <span>Watch Live AI Camera</span>
+              </button>
             </div>
           );
         })}
       </div>
+
+      {/* Dedicated Live Stream Modal for Selected Bus */}
+      {activeStreamBus && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-in fade-in"
+          onClick={() => setActiveStreamBus(null)}
+        >
+          <div
+            className="bg-gray-950 border border-gray-800 rounded-2xl w-full max-w-4xl h-[78vh] flex flex-col overflow-hidden relative shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Top Header */}
+            <div className="px-5 py-3.5 bg-gray-900 border-b border-gray-800 flex items-center justify-between text-white">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                  <Video className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold">
+                    {activeStreamBus.id} — Onboard AI Vision Stream ({activeStreamBus.routeName})
+                  </h3>
+                  <p className="text-[11px] text-gray-400 font-mono">
+                    Driver: {activeStreamBus.driverName} • Speed: {activeStreamBus.speedKmh} km/h • {activeStreamBus.location}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setActiveStreamBus(null)}
+                className="p-1.5 rounded-lg bg-gray-800 hover:bg-red-600 text-gray-300 hover:text-white transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Live Camera CV Feed */}
+            <div className="flex-1 relative overflow-hidden">
+              <LiveCameraCV compact={false} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

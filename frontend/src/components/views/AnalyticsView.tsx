@@ -1,5 +1,15 @@
 import React from 'react';
-import { BarChart3, TrendingUp, Clock, Zap, CheckCircle2, Award } from 'lucide-react';
+import {
+  TrendingUp,
+  CheckCircle,
+  Clock,
+  AlertTriangle,
+  ShieldCheck,
+  Zap,
+  BarChart2,
+  PieChart,
+  Calendar,
+} from 'lucide-react';
 import { SimulationMetrics } from '../../types';
 
 interface AnalyticsViewProps {
@@ -7,100 +17,164 @@ interface AnalyticsViewProps {
 }
 
 export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ metrics }) => {
-  const latency = metrics?.hazard_detection_latency_s ?? 1.8;
-  const fpRate = metrics?.false_positive_rate ?? 0.0;
-  const calcMs = metrics?.route_calc_time_ms ?? 8.4;
-
   return (
-    <div className="space-y-4">
-      {/* View Header */}
-      <div className="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-xs flex items-center justify-between flex-wrap gap-4">
+    <div className="space-y-5">
+      {/* Top Header */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5 flex items-center justify-between flex-wrap gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-black text-gray-900">Smart City Emergency Analytics</h2>
-            <span className="bg-[#EBF8EE] text-[#16A34A] border border-[#BBF7D0] px-2.5 py-0.5 rounded-full font-bold text-xs">
-              Live Evaluation Benchmarks
-            </span>
-          </div>
-          <p className="text-xs text-gray-500 mt-1">
-            Real-time performance evaluation derived from NetworkX graph routing algorithms and city telematics.
+          <h2 className="text-xl font-bold text-gray-900 tracking-tight">Municipal Analytics & System Benchmarks</h2>
+          <p className="text-xs text-gray-500 font-normal mt-0.5">
+            Key performance indicators for road hazards, emergency response routing, and municipal SLA resolution.
           </p>
         </div>
+
+        <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 text-xs text-gray-600 font-medium">
+          <Calendar className="w-3.5 h-3.5 text-gray-500" />
+          <span>Live Operations Period: Active 30 Days</span>
+        </div>
       </div>
 
-      {/* Top 4 Spotlight Cards */}
+      {/* 4 Core KPI Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-xs">
-          <span className="text-xs font-bold text-gray-400 uppercase">Response Time Saved</span>
-          <h3 className="text-3xl font-black text-[#16A34A] mt-1">73.3%</h3>
-          <p className="text-xs text-gray-500 mt-1">4.0 min vs 15.0 min baseline delay</p>
+        {/* 1. Total Detected */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-2 shadow-xs">
+          <div className="flex items-center justify-between text-xs text-gray-500">
+            <span className="font-semibold uppercase tracking-wider text-[11px]">Total Incidents</span>
+            <AlertTriangle className="w-4 h-4 text-gray-400" />
+          </div>
+          <div className="text-3xl font-extrabold text-gray-900">142</div>
+          <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium">
+            <TrendingUp className="w-3.5 h-3.5" />
+            <span>+18 detected this week</span>
+          </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-xs">
-          <span className="text-xs font-bold text-gray-400 uppercase">Detection Latency</span>
-          <h3 className="text-3xl font-black text-gray-900 mt-1">{latency}s</h3>
-          <p className="text-xs text-gray-500 mt-1">Multi-sensor anomaly fusion speed</p>
+        {/* 2. Completed / Resolved */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-2 shadow-xs">
+          <div className="flex items-center justify-between text-xs text-gray-500">
+            <span className="font-semibold uppercase tracking-wider text-[11px]">Completed & Resolved</span>
+            <CheckCircle className="w-4 h-4 text-[#16A34A]" />
+          </div>
+          <div className="text-3xl font-extrabold text-[#16A34A]">118</div>
+          <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+            <span>83.1% Resolution rate</span>
+          </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-xs">
-          <span className="text-xs font-bold text-gray-400 uppercase">Pathfinding Latency</span>
-          <h3 className="text-3xl font-black text-gray-900 mt-1">{calcMs} ms</h3>
-          <p className="text-xs text-gray-500 mt-1">Dijkstra graph compute speed</p>
+        {/* 3. Ongoing / Dispatched */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-2 shadow-xs">
+          <div className="flex items-center justify-between text-xs text-gray-500">
+            <span className="font-semibold uppercase tracking-wider text-[11px]">Active Dispatches</span>
+            <Clock className="w-4 h-4 text-blue-500" />
+          </div>
+          <div className="text-3xl font-extrabold text-blue-600">16</div>
+          <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+            <span>Crews on-site</span>
+          </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-xs">
-          <span className="text-xs font-bold text-gray-400 uppercase">False-Positive Rate</span>
-          <h3 className="text-3xl font-black text-emerald-700 mt-1">{fpRate.toFixed(1)}%</h3>
-          <p className="text-xs text-gray-500 mt-1">Transit boarding geofence filter</p>
+        {/* 4. Pending Review */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-2 shadow-xs">
+          <div className="flex items-center justify-between text-xs text-gray-500">
+            <span className="font-semibold uppercase tracking-wider text-[11px]">Pending Review</span>
+            <AlertTriangle className="w-4 h-4 text-amber-500" />
+          </div>
+          <div className="text-3xl font-extrabold text-amber-600">8</div>
+          <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+            <span>Within 48h SLA</span>
+          </div>
         </div>
       </div>
 
-      {/* Visual Chart Comparison */}
-      <div className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-xs">
-        <h3 className="text-base font-extrabold text-gray-900 mb-4">
-          Travel Time Comparison: Traditional Dispatch vs WayMaker Smart Routing
-        </h3>
-
-        <div className="space-y-4">
-          {/* Baseline Bar */}
-          <div>
-            <div className="flex justify-between text-xs font-bold mb-1">
-              <span className="text-gray-700">Traditional Fixed Route (5th Ave Blocked by Water-Main Rupture)</span>
-              <span className="text-red-600 font-extrabold">15.0 minutes (Gridlocked)</span>
-            </div>
-            <div className="w-full bg-gray-100 h-6 rounded-xl overflow-hidden relative">
-              <div className="h-full bg-red-500 rounded-xl flex items-center px-3 text-white text-xs font-bold" style={{ width: '100%' }}>
-                15.0 min baseline delay
-              </div>
-            </div>
+      {/* Detailed Analytics Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* 1. Incident Categories Breakdown */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4 shadow-xs">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-sm text-gray-900">Incident Category Distribution</h3>
+            <span className="text-xs text-gray-400 font-medium">Last 30 Days</span>
           </div>
 
-          {/* WayMaker Bar */}
-          <div>
-            <div className="flex justify-between text-xs font-bold mb-1">
-              <span className="text-gray-700">WayMaker AI Adaptive Corridor (Somajiguda Bypass + Green Wave Sync)</span>
-              <span className="text-[#16A34A] font-extrabold">4.0 minutes (73% Reduction)</span>
+          <div className="space-y-3 text-xs">
+            {/* Potholes */}
+            <div>
+              <div className="flex justify-between font-semibold mb-1 text-gray-700">
+                <span>Potholes & Road Cracks</span>
+                <span className="text-gray-900">58 Tickets (40.8%)</span>
+              </div>
+              <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                <div className="bg-[#16A34A] h-full rounded-full" style={{ width: '40.8%' }} />
+              </div>
             </div>
-            <div className="w-full bg-gray-100 h-6 rounded-xl overflow-hidden relative">
-              <div className="h-full bg-[#16A34A] rounded-xl flex items-center px-3 text-white text-xs font-extrabold" style={{ width: '27%' }}>
-                4.0 min
+
+            {/* No Helmet Violations */}
+            <div>
+              <div className="flex justify-between font-semibold mb-1 text-gray-700">
+                <span>No-Helmet Violations (AI Vision)</span>
+                <span className="text-gray-900">44 Citations (31.0%)</span>
+              </div>
+              <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                <div className="bg-blue-600 h-full rounded-full" style={{ width: '31%' }} />
+              </div>
+            </div>
+
+            {/* Garbage Overflows */}
+            <div>
+              <div className="flex justify-between font-semibold mb-1 text-gray-700">
+                <span>Garbage Overflows & Debris</span>
+                <span className="text-gray-900">24 Tickets (16.9%)</span>
+              </div>
+              <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                <div className="bg-amber-500 h-full rounded-full" style={{ width: '16.9%' }} />
+              </div>
+            </div>
+
+            {/* Water Ruptures */}
+            <div>
+              <div className="flex justify-between font-semibold mb-1 text-gray-700">
+                <span>Water-Main Ruptures & Flooding</span>
+                <span className="text-gray-900">16 Tickets (11.3%)</span>
+              </div>
+              <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                <div className="bg-red-500 h-full rounded-full" style={{ width: '11.3%' }} />
               </div>
             </div>
           </div>
         </div>
 
-        <div className="mt-6 pt-4 border-t border-gray-150 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-          <div className="p-3 rounded-xl bg-gray-50 border border-gray-150">
-            <span className="text-gray-400 font-bold uppercase text-[10px]">Algorithm</span>
-            <p className="font-extrabold text-gray-900 mt-0.5">NetworkX Dijkstra (Dynamic Cost Matrix)</p>
+        {/* 2. SLA Compliance & Emergency Routing Performance */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4 shadow-xs">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-sm text-gray-900">48-Hour SLA & Dispatch Performance</h3>
+            <span className="text-xs font-semibold text-[#16A34A]">96.4% On-Time</span>
           </div>
-          <div className="p-3 rounded-xl bg-gray-50 border border-gray-150">
-            <span className="text-gray-400 font-bold uppercase text-[10px]">Safety Clearance</span>
-            <p className="font-extrabold text-gray-900 mt-0.5">NTCIP 1202 Signal Preemption Interlock</p>
-          </div>
-          <div className="p-3 rounded-xl bg-gray-50 border border-gray-150">
-            <span className="text-gray-400 font-bold uppercase text-[10px]">Fusion Sources</span>
-            <p className="font-extrabold text-gray-900 mt-0.5">Bus Accelerometer, Ultrasonic, Municipal Flow</p>
+
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="bg-gray-50 p-3.5 rounded-lg border border-gray-100 space-y-1">
+              <span className="text-gray-500 block">Avg Hazard Resolution Time</span>
+              <strong className="text-base font-bold text-gray-900">18.4 Hours</strong>
+              <p className="text-[11px] text-emerald-600 font-medium">Well within 48h limit</p>
+            </div>
+
+            <div className="bg-gray-50 p-3.5 rounded-lg border border-gray-100 space-y-1">
+              <span className="text-gray-500 block">Ambulance Time Saved</span>
+              <strong className="text-base font-bold text-[#16A34A]">4.8 Minutes / Run</strong>
+              <p className="text-[11px] text-gray-500">Via Green Wave preemption</p>
+            </div>
+
+            <div className="bg-gray-50 p-3.5 rounded-lg border border-gray-100 space-y-1">
+              <span className="text-gray-500 block">AI False Positive Rate</span>
+              <strong className="text-base font-bold text-gray-900">
+                {metrics?.false_positive_rate ? `${(metrics.false_positive_rate * 100).toFixed(1)}%` : '3.2%'}
+              </strong>
+              <p className="text-[11px] text-emerald-600 font-medium">Multi-sensor validated</p>
+            </div>
+
+            <div className="bg-gray-50 p-3.5 rounded-lg border border-gray-100 space-y-1">
+              <span className="text-gray-500 block">Auto-Escalated Tickets</span>
+              <strong className="text-base font-bold text-red-600">3 Tickets</strong>
+              <p className="text-[11px] text-gray-500">Escalated to Zonal Chief</p>
+            </div>
           </div>
         </div>
       </div>
