@@ -156,25 +156,26 @@ export const LiveMap: React.FC<LiveMapProps> = ({ onSelectHazard }) => {
       className: 'map-alert-pulse-ring',
       html: `
         <div style="
-          width: 44px;
-          height: 44px;
+          width: 52px;
+          height: 52px;
           border-radius: 50%;
           border: 3px solid ${alertBg};
-          background: ${isHelmet ? 'rgba(37,99,235,0.25)' : 'rgba(220,38,38,0.25)'};
-          animation: ping 1.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+          background: ${isHelmet ? 'rgba(37,99,235,0.3)' : 'rgba(220,38,38,0.3)'};
+          animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+          box-shadow: 0 0 16px ${alertBg};
         "></div>
       `,
-      iconSize: [44, 44],
-      iconAnchor: [22, 22],
+      iconSize: [52, 52],
+      iconAnchor: [26, 26],
     });
 
     const ringMarker = L.marker([activeMapAlert.lat, activeMapAlert.lng], {
       icon: ringIcon,
-      zIndexOffset: 998,
+      zIndexOffset: 9998,
     });
     ringMarker.addTo(alertLayerGroup.current);
 
-    // 2. Floating callout bubble directly above the bus
+    // 2. Floating callout bubble directly above the detecting bus
     const calloutIcon = L.divIcon({
       className: 'map-alert-callout-wrapper',
       html: `
@@ -182,15 +183,15 @@ export const LiveMap: React.FC<LiveMapProps> = ({ onSelectHazard }) => {
           display: flex;
           flex-direction: column;
           align-items: center;
-          transform: translateY(-46px);
+          transform: translateY(-50px);
           pointer-events: auto;
           cursor: pointer;
-          filter: drop-shadow(0 4px 10px rgba(0,0,0,0.35));
+          filter: drop-shadow(0 4px 14px rgba(0,0,0,0.5));
         ">
           <div style="
             background: ${alertBg};
-            color: white;
-            padding: 3px 8px;
+            color: #ffffff;
+            padding: 4px 10px;
             border-radius: 8px;
             font-family: system-ui, -apple-system, sans-serif;
             font-size: 11px;
@@ -198,30 +199,31 @@ export const LiveMap: React.FC<LiveMapProps> = ({ onSelectHazard }) => {
             border: 2px solid #ffffff;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 5px;
             white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
           ">
-            <span style="font-size: 10px;">${alertIcon}</span>
+            <span style="font-size: 12px;">${alertIcon}</span>
             <span>Bus ${activeMapAlert.busNumber}: ${alertLabel}</span>
           </div>
           <div style="
-            width: 7px;
-            height: 7px;
+            width: 8px;
+            height: 8px;
             background: ${alertBg};
             transform: rotate(45deg);
-            margin-top: -4px;
+            margin-top: -5px;
             border-right: 2px solid #ffffff;
             border-bottom: 2px solid #ffffff;
           "></div>
         </div>
       `,
-      iconSize: [180, 50],
-      iconAnchor: [90, 25],
+      iconSize: [220, 50],
+      iconAnchor: [110, 25],
     });
 
     const calloutMarker = L.marker([activeMapAlert.lat, activeMapAlert.lng], {
       icon: calloutIcon,
-      zIndexOffset: 1000,
+      zIndexOffset: 9999,
     });
     calloutMarker.on('click', () => onSelectHazard?.());
     calloutMarker.addTo(alertLayerGroup.current);
@@ -232,11 +234,12 @@ export const LiveMap: React.FC<LiveMapProps> = ({ onSelectHazard }) => {
       {/* Leaflet Map Div */}
       <div ref={mapContainerRef} className="w-full h-full z-0" />
 
-      {/* TOP-CENTER DYNAMIC 2.5s POPUP ALERT TOAST (Auto-Dismissing Banner) */}
+      {/* TOP-CENTER DYNAMIC 4s POPUP ALERT TOAST (Auto-Dismissing Banner) */}
       {activeMapAlert && (
         <div
           onClick={() => onSelectHazard?.()}
-          className="absolute top-4 left-1/2 -translate-x-1/2 z-500 max-w-md w-[90%] bg-gray-950/95 text-white p-3.5 rounded-2xl shadow-2xl border border-gray-700 flex items-center justify-between gap-3 animate-in slide-in-from-top-4 duration-300 backdrop-blur-md cursor-pointer hover:border-gray-500 transition"
+          style={{ zIndex: 9999 }}
+          className="absolute top-4 left-1/2 -translate-x-1/2 max-w-md w-[90%] bg-gray-950/95 text-white p-3.5 rounded-2xl shadow-2xl border border-gray-700 flex items-center justify-between gap-3 animate-in slide-in-from-top-4 duration-300 backdrop-blur-md cursor-pointer hover:border-gray-500 transition"
           title="Click to view ticket dossier"
         >
           <div className="flex items-center gap-3 min-w-0">

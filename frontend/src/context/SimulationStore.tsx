@@ -335,6 +335,12 @@ export const SimulationStoreProvider: React.FC<{ children: React.ReactNode }> = 
 
   const alertTimeoutRef = useRef<any>(null);
   const ticketIdCounter = useRef<number>(106);
+  const busesRef = useRef<BusRouteInfo[]>(INITIAL_BUSES);
+
+  // Keep busesRef synchronized with latest bus state
+  useEffect(() => {
+    busesRef.current = buses;
+  }, [buses]);
 
   // 1. Continuous road motion loop: moves the 6 buses along their real road corridors
   useEffect(() => {
@@ -376,21 +382,31 @@ export const SimulationStoreProvider: React.FC<{ children: React.ReactNode }> = 
     return () => clearInterval(motionInterval);
   }, []);
 
-  // 2. Periodic incident detection trigger: Every 10 seconds, one random bus reports an incident, triggers map popup, and creates a synced ticket
+  // 2. Periodic incident detection trigger: Reliable 10-second timer using busesRef (never gets reset by bus movement)
   useEffect(() => {
+    const incidentTypes: ('POTHOLE' | 'NO_HELMET' | 'GARBAGE' | 'ROAD_DAMAGE')[] = [
+      'POTHOLE',
+      'NO_HELMET',
+      'GARBAGE',
+      'ROAD_DAMAGE',
+    ];
+
+    // Initial alert after 2 seconds on app load so user sees it immediately
+    const initialTimeout = setTimeout(() => {
+      triggerManualIncident('POTHOLE');
+    }, 2000);
+
+    // Recurring alert every 10 seconds
     const incidentTimer = setInterval(() => {
-      const incidentTypes: ('POTHOLE' | 'NO_HELMET' | 'GARBAGE' | 'ROAD_DAMAGE')[] = [
-        'POTHOLE',
-        'NO_HELMET',
-        'GARBAGE',
-        'ROAD_DAMAGE',
-      ];
       const chosenType = incidentTypes[Math.floor(Math.random() * incidentTypes.length)];
       triggerManualIncident(chosenType);
-    }, 10000); // 10 seconds cycle
+    }, 10000);
 
-    return () => clearInterval(incidentTimer);
-  }, [buses]);
+    return () => {
+      clearTimeout(initialTimeout);
+      clearInterval(incidentTimer);
+    };
+  }, []); // Empty dependency array prevents premature clearing!
 
   // 3. SLA Countdown timer for tickets
   useEffect(() => {
@@ -414,7 +430,8 @@ export const SimulationStoreProvider: React.FC<{ children: React.ReactNode }> = 
 
   // Helper to trigger an incident (from periodic 10s generator or manual trigger)
   const triggerManualIncident = (type: 'POTHOLE' | 'NO_HELMET' | 'GARBAGE' | 'ROAD_DAMAGE') => {
-    const reportingBus = buses[Math.floor(Math.random() * buses.length)] || buses[0];
+    const currentBuses = busesRef.current.length > 0 ? busesRef.current : INITIAL_BUSES;
+    const reportingBus = currentBuses[Math.floor(Math.random() * currentBuses.length)] || currentBuses[0];
     const now = new Date();
     const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
@@ -456,7 +473,7 @@ export const SimulationStoreProvider: React.FC<{ children: React.ReactNode }> = 
       prev.map((b) => (b.id === reportingBus.id ? { ...b, status: 'HAZARD_ALERT' } : b))
     );
 
-    // Show on-map popup alert badge and toast banner for 3.5 seconds, then auto-dismiss
+    // Show on-map popup alert badge and toast banner for 4.0 seconds, then auto-dismiss
     setActiveMapAlert(newAlert);
     if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
     alertTimeoutRef.current = setTimeout(() => {
@@ -464,7 +481,7 @@ export const SimulationStoreProvider: React.FC<{ children: React.ReactNode }> = 
       setBuses((prev) =>
         prev.map((b) => (b.id === reportingBus.id ? { ...b, status: 'IN_TRANSIT' } : b))
       );
-    }, 3500);
+    }, 4000);
 
     // Create new Ticket synced with this detection event (capped at 20)
     const newTicketId = `TK-${ticketIdCounter.current++}`;
