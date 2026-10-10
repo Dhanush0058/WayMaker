@@ -69,28 +69,28 @@ interface SimulationStoreType {
 
 const SimulationStoreContext = createContext<SimulationStoreType | undefined>(undefined);
 
-// Real Hyderabad inland road corridors away from Hussain Sagar (Jubilee Hills, Banjara Hills, Ameerpet, SR Nagar, Erragadda, Punjagutta, Masab Tank)
+// Western Hyderabad Tech Corridor road networks (Hitec City, Madhapur, Gachibowli, Kondapur, Jubilee Hills West)
 const INITIAL_BUSES: BusRouteInfo[] = [
   {
     id: '47L',
     busCode: 'TS 09 Z 4712',
-    routeName: 'Jubilee Hills ⇄ Madhapur via Road No. 36',
+    routeName: 'Hitec City Cyber Towers ⇄ Madhapur ⇄ Jubilee Hills Rd 36',
     driverName: 'K. Raghavan',
     driverContact: '+91 98490 12841',
     speedKmh: 42,
     status: 'IN_TRANSIT',
-    currentLocationName: 'Jubilee Hills Checkpost Junction',
-    lat: 17.4280,
-    lng: 78.4120,
+    currentLocationName: 'Cyber Towers Junction, Hitec City',
+    lat: 17.4504,
+    lng: 78.3808,
     heading: 45,
     occupancy: '38 / 52 Seats',
     waypoints: [
-      [17.4310, 78.4050], // Road 36 / Madhapur
-      [17.4280, 78.4120], // Jubilee Hills Checkpost
-      [17.4240, 78.4210], // Road No. 45 Junction
-      [17.4200, 78.4290], // Banjara Hills Rd 10
-      [17.4240, 78.4210],
-      [17.4280, 78.4120],
+      [17.4504, 78.3808], // Cyber Towers
+      [17.4420, 78.3880], // Madhapur 100ft Road
+      [17.4350, 78.3970], // Road No. 36 Ext
+      [17.4300, 78.4080], // Jubilee Hills Checkpost
+      [17.4350, 78.3970],
+      [17.4420, 78.3880],
     ],
     currentWaypointIdx: 1,
     progress: 0.4,
@@ -98,23 +98,23 @@ const INITIAL_BUSES: BusRouteInfo[] = [
   {
     id: '10H',
     busCode: 'TS 08 UB 1084',
-    routeName: 'Ameerpet ⇄ Erragadda via SR Nagar Corridor',
+    routeName: 'Kondapur X Roads ⇄ Botanical Garden ⇄ Gachibowli',
     driverName: 'M. Suresh Kumar',
     driverContact: '+91 97012 34910',
     speedKmh: 36,
     status: 'IN_TRANSIT',
-    currentLocationName: 'SR Nagar Metro Station',
-    lat: 17.4420,
-    lng: 78.4430,
+    currentLocationName: 'Kothaguda X Roads, Kondapur',
+    lat: 17.4550,
+    lng: 78.3680,
     heading: 120,
     occupancy: '44 / 52 Seats',
     waypoints: [
-      [17.4370, 78.4480], // Ameerpet Metro Junction
-      [17.4420, 78.4430], // SR Nagar Main Road
-      [17.4480, 78.4380], // Vengal Rao Nagar / ESI
-      [17.4550, 78.4310], // Erragadda X Roads
-      [17.4480, 78.4380],
-      [17.4420, 78.4430],
+      [17.4650, 78.3650], // Kondapur RTO
+      [17.4550, 78.3680], // Kothaguda X Roads
+      [17.4450, 78.3650], // Botanical Garden Main Rd
+      [17.4350, 78.3620], // Gachibowli Telecom Nagar
+      [17.4450, 78.3650],
+      [17.4550, 78.3680],
     ],
     currentWaypointIdx: 1,
     progress: 0.3,
@@ -122,23 +122,23 @@ const INITIAL_BUSES: BusRouteInfo[] = [
   {
     id: '218',
     busCode: 'TS 11 Z 2180',
-    routeName: 'Punjagutta ⇄ Sanath Nagar via Balkampet',
+    routeName: 'Gachibowli Bio-Diversity ⇄ Mindspace IT Park ⇄ Hitec City',
     driverName: 'P. Venkat Reddy',
     driverContact: '+91 99882 11094',
     speedKmh: 48,
     status: 'IN_TRANSIT',
-    currentLocationName: 'Ameerpet X Roads Corridor',
+    currentLocationName: 'Mindspace Circle, Hitec City',
     lat: 17.4340,
-    lng: 78.4450,
+    lng: 78.3780,
     heading: 90,
     occupancy: '49 / 52 Seats',
     waypoints: [
-      [17.4260, 78.4480], // Punjagutta Flyover
-      [17.4340, 78.4450], // Ameerpet X Roads
-      [17.4420, 78.4460], // Balkampet Yellamma Temple Rd
-      [17.4520, 78.4480], // Sanath Nagar Industrial Corridor
-      [17.4420, 78.4460],
-      [17.4340, 78.4450],
+      [17.4240, 78.3750], // Bio-Diversity Junction
+      [17.4340, 78.3780], // Mindspace Roundabout
+      [17.4430, 78.3800], // Vittal Rao Nagar
+      [17.4490, 78.3770], // Hitec City Flyover
+      [17.4430, 78.3800],
+      [17.4340, 78.3780],
     ],
     currentWaypointIdx: 1,
     progress: 0.5,
@@ -146,23 +146,23 @@ const INITIAL_BUSES: BusRouteInfo[] = [
   {
     id: '127K',
     busCode: 'TS 09 EA 1279',
-    routeName: 'Banjara Hills Rd 1 ⇄ Film Nagar via Rd 12',
+    routeName: 'Inorbit Mall ⇄ Durgam Cheruvu Cable Corridor ⇄ Jubilee Hills Rd 45',
     driverName: 'T. Narsimha',
     driverContact: '+91 94401 88320',
     speedKmh: 28,
     status: 'TRANSIT_STOP',
-    currentLocationName: 'Banjara Hills Road No. 12 Junction',
-    lat: 17.4180,
-    lng: 78.4320,
+    currentLocationName: 'Inorbit Mall Transit Bay',
+    lat: 17.4330,
+    lng: 78.3870,
     heading: 180,
     occupancy: '31 / 52 Seats',
     waypoints: [
-      [17.4140, 78.4420], // Banjara Hills Rd 1 / Taj Krishna
-      [17.4180, 78.4320], // Banjara Hills Rd 12
-      [17.4190, 78.4210], // Cancer Hospital / KBR Outer
-      [17.4150, 78.4110], // Film Nagar Main Rd
-      [17.4190, 78.4210],
-      [17.4180, 78.4320],
+      [17.4330, 78.3870], // Inorbit Mall Approach
+      [17.4355, 78.3930], // Cable Bridge West Deck
+      [17.4350, 78.4020], // Road No. 45 Flyover
+      [17.4280, 78.4090], // Jubilee Hills Rd 45 / Rd 36
+      [17.4350, 78.4020],
+      [17.4355, 78.3930],
     ],
     currentWaypointIdx: 1,
     progress: 0.3,
@@ -170,49 +170,49 @@ const INITIAL_BUSES: BusRouteInfo[] = [
   {
     id: '222A',
     busCode: 'TS 07 UA 2221',
-    routeName: 'Masab Tank ⇄ KBR Park via Banjara Hills Rd 10',
+    routeName: 'Gachibowli Stadium ⇄ IIIT Junction ⇄ Financial District',
     driverName: 'G. Srinivas Rao',
     driverContact: '+91 91210 99402',
     speedKmh: 34,
     status: 'IN_TRANSIT',
-    currentLocationName: 'Banjara Hills Road No. 10 Avenue',
-    lat: 17.4200,
-    lng: 78.4300,
+    currentLocationName: 'IIIT Hyderabad Junction, Gachibowli',
+    lat: 17.4350,
+    lng: 78.3560,
     heading: 270,
     occupancy: '26 / 52 Seats',
     waypoints: [
-      [17.4040, 78.4440], // Masab Tank Flyover
-      [17.4120, 78.4390], // Banjara Hills Care Hospital
-      [17.4200, 78.4300], // Banjara Hills Rd 10
-      [17.4260, 78.4220], // KBR Park Gate
-      [17.4200, 78.4300],
-      [17.4120, 78.4390],
+      [17.4400, 78.3480], // Gachibowli Stadium
+      [17.4350, 78.3560], // IIIT Hyderabad Main Gate
+      [17.4270, 78.3580], // Gachibowli X Roads
+      [17.4180, 78.3490], // Financial District Wipro Circle
+      [17.4270, 78.3580],
+      [17.4350, 78.3560],
     ],
-    currentWaypointIdx: 2,
+    currentWaypointIdx: 1,
     progress: 0.4,
   },
   {
     id: '5K',
     busCode: 'TS 09 Z 0505',
-    routeName: 'Yousufguda ⇄ Srinagar Colony ⇄ Jubilee Hills',
+    routeName: 'Jubilee Hills Rd 36 ⇄ Film Nagar ⇄ Shaikpet Corridor',
     driverName: 'D. Naidu',
     driverContact: '+91 98850 77123',
     speedKmh: 39,
     status: 'IN_TRANSIT',
-    currentLocationName: 'Yousufguda Main Corridor',
-    lat: 17.4390,
-    lng: 78.4260,
+    currentLocationName: 'Shaikpet Main Flyover',
+    lat: 17.4090,
+    lng: 78.3950,
     heading: 330,
     occupancy: '42 / 52 Seats',
     waypoints: [
-      [17.4450, 78.4330], // Vengal Rao Nagar
-      [17.4390, 78.4260], // Yousufguda Checkpost
-      [17.4340, 78.4200], // Sri Krishna Nagar
-      [17.4280, 78.4180], // Jubilee Hills / Srinagar Colony Rd
-      [17.4340, 78.4200],
-      [17.4390, 78.4260],
+      [17.4300, 78.4080], // Jubilee Hills Rd 36
+      [17.4180, 78.4050], // Film Nagar Cultural Centre
+      [17.4090, 78.3950], // Shaikpet Flyover
+      [17.4160, 78.3800], // Tolichowki-Gachibowli Link
+      [17.4090, 78.3950],
+      [17.4180, 78.4050],
     ],
-    currentWaypointIdx: 1,
+    currentWaypointIdx: 2,
     progress: 0.3,
   },
 ];
@@ -222,13 +222,13 @@ const INITIAL_TICKETS: TicketItem[] = [
     id: 'TK-101',
     category: 'POTHOLE',
     title: 'Severe Pothole & Road Rupture',
-    location: 'Road No. 36 • Near Jubilee Hills Checkpost',
-    coordinates: '17.4280° N, 78.4120° E',
+    location: '100 Feet Road • Near Cyber Towers Madhapur',
+    coordinates: '17.4504° N, 78.3808° E',
     detectedBy: 'Bus 47L Onboard AI Camera',
     timestamp: 'Today at 08:14 AM',
     assignedOfficer: 'Eng. R. K. Varma',
     officerRole: 'Ward Field Engineer',
-    department: 'GHMC Road Maintenance Ward 14',
+    department: 'GHMC Road Maintenance Ward 18 (Serilingampally)',
     severity: 'CRITICAL',
     status: 'IN_PROGRESS',
     slaHoursRemaining: 34.2,
@@ -238,13 +238,13 @@ const INITIAL_TICKETS: TicketItem[] = [
     id: 'TK-102',
     category: 'NO_HELMET_VIOLATION',
     title: 'Rider Without Helmet Violation',
-    location: 'Banjara Hills Road No. 12',
-    coordinates: '17.4180° N, 78.4320° E',
+    location: 'Inorbit Mall Approach Road, Madhapur',
+    coordinates: '17.4330° N, 78.3870° E',
     detectedBy: 'Bus 127K AI Telematics Camera',
     timestamp: 'Today at 09:22 AM',
     assignedOfficer: 'Officer S. Rao',
     officerRole: 'Sub-Inspector Traffic',
-    department: 'Hyderabad City Traffic Enforcement',
+    department: 'Cyberabad Traffic Police Enforcement',
     severity: 'HIGH',
     status: 'PENDING',
     slaHoursRemaining: 42.5,
@@ -256,8 +256,8 @@ const INITIAL_TICKETS: TicketItem[] = [
     id: 'TK-103',
     category: 'GARBAGE',
     title: 'Municipal Solid Waste Overflow',
-    location: 'SR Nagar Main Road Corridor',
-    coordinates: '17.4420° N, 78.4430° E',
+    location: 'Botanical Garden Main Road, Kondapur',
+    coordinates: '17.4550° N, 78.3680° E',
     detectedBy: 'Bus 10H AI Telematics',
     timestamp: 'Yesterday at 04:30 PM',
     assignedOfficer: 'Insp. Anand Kumar',
@@ -272,8 +272,8 @@ const INITIAL_TICKETS: TicketItem[] = [
     id: 'TK-104',
     category: 'ROAD_DAMAGE',
     title: 'Water-Main Pipe Fracture & Road Flooding',
-    location: 'Punjagutta Main Flyover Approach',
-    coordinates: '17.4278° N, 78.4485° E',
+    location: 'Mindspace Circle Underpass, Hitec City',
+    coordinates: '17.4340° N, 78.3780° E',
     detectedBy: 'Bus 218 Onboard Camera',
     timestamp: '2 Days Ago at 11:00 AM',
     assignedOfficer: 'Chief Eng. A. Patil',
@@ -288,13 +288,13 @@ const INITIAL_TICKETS: TicketItem[] = [
     id: 'TK-105',
     category: 'POTHOLE',
     title: 'Asphalt Depression Near Bus Bay',
-    location: 'Banjara Hills Road No. 10 Avenue',
-    coordinates: '17.4200° N, 78.4300° E',
+    location: 'IIIT Hyderabad Junction, Gachibowli',
+    coordinates: '17.4350° N, 78.3560° E',
     detectedBy: 'Bus 222A Telematics',
     timestamp: '3 Days Ago at 02:15 PM',
     assignedOfficer: 'Eng. R. K. Varma',
     officerRole: 'Ward Field Engineer',
-    department: 'GHMC Road Maintenance Ward 14',
+    department: 'GHMC Road Maintenance Ward 18',
     severity: 'LOW',
     status: 'RESOLVED',
     slaHoursRemaining: 0.0,
@@ -310,7 +310,7 @@ export const SimulationStoreProvider: React.FC<{ children: React.ReactNode }> = 
     {
       id: 'log-1',
       title: 'Bus 47L Telematics Ping',
-      desc: 'Speed: 42 km/h • Somajiguda Corridor normal',
+      desc: 'Speed: 42 km/h • Cyber Towers Corridor normal',
       time: '10:44 AM',
       tag: 'TELEMETRY',
       tagColor: 'bg-emerald-50 text-[#16A34A] border-emerald-200',
@@ -326,7 +326,7 @@ export const SimulationStoreProvider: React.FC<{ children: React.ReactNode }> = 
     {
       id: 'log-3',
       title: 'Bus 218 Speed Update',
-      desc: 'Speed: 48 km/h • Passing Punjagutta Flyover',
+      desc: 'Speed: 48 km/h • Passing Mindspace IT Park',
       time: '10:40 AM',
       tag: 'TELEMETRY',
       tagColor: 'bg-emerald-50 text-[#16A34A] border-emerald-200',

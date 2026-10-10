@@ -24,10 +24,10 @@ export const LiveMap: React.FC<LiveMapProps> = ({ onSelectHazard }) => {
   useEffect(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return;
 
-    // Centered over West Hyderabad inland road network (Jubilee Hills, Banjara Hills, Ameerpet, SR Nagar, Punjagutta)
+    // Centered over Western Hyderabad Tech Corridor (Hitec City, Madhapur, Gachibowli, Kondapur, Jubilee Hills)
     const map = L.map(mapContainerRef.current, {
-      center: [17.4280, 78.4280],
-      zoom: 14,
+      center: [17.4380, 78.3820],
+      zoom: 13.5,
       zoomControl: false,
     });
 
