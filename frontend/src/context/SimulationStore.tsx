@@ -376,7 +376,7 @@ export const SimulationStoreProvider: React.FC<{ children: React.ReactNode }> = 
     return () => clearInterval(motionInterval);
   }, []);
 
-  // 2. Periodic incident detection trigger: spawns 2.5s map alert + creates ticket + logs event
+  // 2. Periodic incident detection trigger: Every 10 seconds, one random bus reports an incident, triggers map popup, and creates a synced ticket
   useEffect(() => {
     const incidentTimer = setInterval(() => {
       const incidentTypes: ('POTHOLE' | 'NO_HELMET' | 'GARBAGE' | 'ROAD_DAMAGE')[] = [
@@ -387,7 +387,7 @@ export const SimulationStoreProvider: React.FC<{ children: React.ReactNode }> = 
       ];
       const chosenType = incidentTypes[Math.floor(Math.random() * incidentTypes.length)];
       triggerManualIncident(chosenType);
-    }, 7500);
+    }, 10000); // 10 seconds cycle
 
     return () => clearInterval(incidentTimer);
   }, [buses]);
@@ -412,11 +412,11 @@ export const SimulationStoreProvider: React.FC<{ children: React.ReactNode }> = 
     return () => clearInterval(slaTimer);
   }, []);
 
-  // Helper to trigger an incident (from periodic generator or manual trigger)
+  // Helper to trigger an incident (from periodic 10s generator or manual trigger)
   const triggerManualIncident = (type: 'POTHOLE' | 'NO_HELMET' | 'GARBAGE' | 'ROAD_DAMAGE') => {
     const reportingBus = buses[Math.floor(Math.random() * buses.length)] || buses[0];
     const now = new Date();
-    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
     let title = 'Pothole & Surface Damage Detected';
     let cat: TicketItem['category'] = 'POTHOLE';
@@ -451,14 +451,22 @@ export const SimulationStoreProvider: React.FC<{ children: React.ReactNode }> = 
       timestamp: timeStr,
     };
 
-    // Show map alert for 2.5 seconds, then auto-dismiss
+    // Temporarily set bus status to HAZARD_ALERT
+    setBuses((prev) =>
+      prev.map((b) => (b.id === reportingBus.id ? { ...b, status: 'HAZARD_ALERT' } : b))
+    );
+
+    // Show on-map popup alert badge and toast banner for 3.5 seconds, then auto-dismiss
     setActiveMapAlert(newAlert);
     if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
     alertTimeoutRef.current = setTimeout(() => {
       setActiveMapAlert(null);
-    }, 2800);
+      setBuses((prev) =>
+        prev.map((b) => (b.id === reportingBus.id ? { ...b, status: 'IN_TRANSIT' } : b))
+      );
+    }, 3500);
 
-    // Create new Ticket
+    // Create new Ticket synced with this detection event (capped at 20)
     const newTicketId = `TK-${ticketIdCounter.current++}`;
     const newTicket: TicketItem = {
       id: newTicketId,
