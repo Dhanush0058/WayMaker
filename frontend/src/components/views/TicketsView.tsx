@@ -19,6 +19,7 @@ import {
   Phone,
   Building,
   AlertCircle,
+  Receipt,
 } from 'lucide-react';
 import { useSimulationStore, TicketItem } from '../../context/SimulationStore';
 
@@ -105,6 +106,7 @@ export const TicketsView: React.FC = () => {
       {/* Tickets List Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {filteredTickets.map((t) => {
+          const isViolation = t.category === 'NO_HELMET_VIOLATION';
           const isEscalated = t.status === 'ESCALATED';
           const isResolved = t.status === 'RESOLVED';
           const hours = Math.floor(t.slaHoursRemaining);
@@ -140,7 +142,7 @@ export const TicketsView: React.FC = () => {
                         ? 'bg-blue-50 text-blue-700 border-blue-200'
                         : 'bg-amber-50 text-amber-700 border-amber-200'
                     }`}>
-                      {t.status.replace('_', ' ')}
+                      {isViolation && isResolved ? 'FINE PAID' : isViolation ? 'CHALLAN SENT' : t.status.replace('_', ' ')}
                     </span>
                   </div>
                   <h3 className="font-bold text-sm text-gray-900 mt-2">{t.title}</h3>
@@ -154,7 +156,7 @@ export const TicketsView: React.FC = () => {
                 <div
                   onClick={() => setSelectedTicket(t)}
                   className="w-20 h-20 rounded-lg overflow-hidden border border-gray-200 shrink-0 cursor-pointer group relative bg-gray-100"
-                  title="Click to inspect visual evidence & escalation"
+                  title="Click to inspect visual evidence"
                 >
                   <img
                     src={t.imageUrl}
@@ -193,66 +195,106 @@ export const TicketsView: React.FC = () => {
                 </div>
               </div>
 
-              {/* 48-Hour SLA Timer Bar & Escalation Status */}
+              {/* Bottom Row: Different for No-Helmet Violation vs Municipal Physical Hazards */}
               <div className="border-t border-gray-100 pt-3 flex items-center justify-between flex-wrap gap-2 text-xs">
-                <div className="flex items-center gap-2">
-                  <Clock className={`w-4 h-4 ${isEscalated ? 'text-red-600' : isResolved ? 'text-[#16A34A]' : 'text-amber-600'}`} />
-                  <div>
-                    <span className="text-gray-500 text-[11px] block">48-Hour Resolution SLA:</span>
-                    {isResolved ? (
-                      <span className="font-bold text-[#16A34A]">Completed within SLA</span>
-                    ) : isEscalated ? (
-                      <span className="font-bold text-red-600">SLA Expired • Auto-Escalated to Chief Commissioner</span>
-                    ) : (
-                      <span className="font-mono font-bold text-gray-900">
-                        {hours}h {mins}m remaining
-                      </span>
-                    )}
-                  </div>
-                </div>
+                {isViolation ? (
+                  // No-Helmet Violations: No 48h SLA countdown, No dispatch crew
+                  <>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-blue-600 shrink-0" />
+                      <div>
+                        <span className="text-gray-500 text-[11px] block">Traffic Enforcement:</span>
+                        <span className="font-semibold text-blue-700">
+                          {isResolved ? 'Fine Paid & Case Closed' : 'E-Challan Dispatched to Owner'}
+                        </span>
+                      </div>
+                    </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-2">
-                  {t.status === 'PENDING' && (
-                    <button
-                      onClick={() => updateTicketStatus(t.id, 'IN_PROGRESS')}
-                      className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition cursor-pointer"
-                    >
-                      Dispatch Crew
-                    </button>
-                  )}
-                  {t.status === 'IN_PROGRESS' && (
-                    <button
-                      onClick={() => updateTicketStatus(t.id, 'RESOLVED')}
-                      className="px-3 py-1.5 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white font-semibold text-xs transition cursor-pointer flex items-center gap-1"
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                      <span>Mark Resolved</span>
-                    </button>
-                  )}
-                  {t.status === 'ESCALATED' && (
-                    <button
-                      onClick={() => updateTicketStatus(t.id, 'RESOLVED')}
-                      className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold text-xs transition cursor-pointer"
-                    >
-                      Emergency Close
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setSelectedTicket(t)}
-                    className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-600 transition cursor-pointer"
-                    title="View Comprehensive Ticket Dossier"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                    <div className="flex items-center gap-2">
+                      {!isResolved ? (
+                        <button
+                          onClick={() => updateTicketStatus(t.id, 'RESOLVED')}
+                          className="px-3 py-1.5 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white font-semibold text-xs transition cursor-pointer flex items-center gap-1"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Mark Fine Paid</span>
+                        </button>
+                      ) : (
+                        <span className="text-xs font-semibold text-[#16A34A] bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200">
+                          Settled
+                        </span>
+                      )}
+                      <button
+                        onClick={() => setSelectedTicket(t)}
+                        className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-600 transition cursor-pointer"
+                        title="View Violation Details"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  // Municipal Physical Hazards (Potholes, Garbage, Road Damage): 48h SLA & Dispatch Crew
+                  <>
+                    <div className="flex items-center gap-2">
+                      <Clock className={`w-4 h-4 ${isEscalated ? 'text-red-600' : isResolved ? 'text-[#16A34A]' : 'text-amber-600'}`} />
+                      <div>
+                        <span className="text-gray-500 text-[11px] block">48-Hour Resolution SLA:</span>
+                        {isResolved ? (
+                          <span className="font-bold text-[#16A34A]">Completed within SLA</span>
+                        ) : isEscalated ? (
+                          <span className="font-bold text-red-600">SLA Expired • Auto-Escalated</span>
+                        ) : (
+                          <span className="font-mono font-bold text-gray-900">
+                            {hours}h {mins}m remaining
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {t.status === 'PENDING' && (
+                        <button
+                          onClick={() => updateTicketStatus(t.id, 'IN_PROGRESS')}
+                          className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition cursor-pointer"
+                        >
+                          Dispatch Crew
+                        </button>
+                      )}
+                      {t.status === 'IN_PROGRESS' && (
+                        <button
+                          onClick={() => updateTicketStatus(t.id, 'RESOLVED')}
+                          className="px-3 py-1.5 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white font-semibold text-xs transition cursor-pointer flex items-center gap-1"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Mark Resolved</span>
+                        </button>
+                      )}
+                      {t.status === 'ESCALATED' && (
+                        <button
+                          onClick={() => updateTicketStatus(t.id, 'RESOLVED')}
+                          className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold text-xs transition cursor-pointer"
+                        >
+                          Emergency Close
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setSelectedTicket(t)}
+                        className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-600 transition cursor-pointer"
+                        title="View Comprehensive Ticket Dossier"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* COMPREHENSIVE TICKET DOSSIER & ESCALATION MODAL */}
+      {/* COMPREHENSIVE TICKET DOSSIER & EVIDENCE MODAL */}
       {selectedTicket && (
         <div
           className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
@@ -297,70 +339,90 @@ export const TicketsView: React.FC = () => {
               </div>
             </div>
 
-            {/* 3-Tier Escalation Timeline & 48-Hour SLA */}
-            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wide">
-                  48-Hour Resolution SLA & Escalation Hierarchy
-                </h4>
-                <span className="font-mono text-xs font-bold text-gray-800">
-                  {selectedTicket.status === 'RESOLVED'
-                    ? 'RESOLVED'
-                    : selectedTicket.status === 'ESCALATED'
-                    ? 'ESCALATED (>48h)'
-                    : `${Math.floor(selectedTicket.slaHoursRemaining)}h remaining`}
-                </span>
+            {/* Specific content: Violation E-Challan details vs Municipal 3-tier escalation */}
+            {selectedTicket.category === 'NO_HELMET_VIOLATION' ? (
+              <div className="bg-blue-50/70 rounded-xl p-4 border border-blue-200 space-y-2 text-xs">
+                <div className="flex items-center justify-between font-bold text-blue-900">
+                  <span className="flex items-center gap-1.5">
+                    <Receipt className="w-4 h-4 text-blue-600" />
+                    Electronic Traffic Challan (Automated Dispatch)
+                  </span>
+                  <span className="font-mono font-bold text-red-600">{selectedTicket.fineAmount}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-gray-700 pt-1">
+                  <div>
+                    <span className="text-gray-500 block">Vehicle Registration:</span>
+                    <strong className="font-mono font-bold text-gray-900">{selectedTicket.vehiclePlate}</strong>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 block">Issuing Authority:</span>
+                    <strong className="font-semibold text-gray-900">{selectedTicket.department}</strong>
+                  </div>
+                </div>
               </div>
-
-              {/* Progress Bar */}
-              <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-                <div
-                  className={`h-full transition-all duration-500 ${
-                    selectedTicket.status === 'RESOLVED'
-                      ? 'bg-[#16A34A]'
+            ) : (
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wide">
+                    48-Hour Resolution SLA & Escalation Hierarchy
+                  </h4>
+                  <span className="font-mono text-xs font-bold text-gray-800">
+                    {selectedTicket.status === 'RESOLVED'
+                      ? 'RESOLVED'
                       : selectedTicket.status === 'ESCALATED'
-                      ? 'bg-red-600'
-                      : 'bg-amber-500'
-                  }`}
-                  style={{
-                    width: `${Math.min(100, Math.max(5, ((48 - selectedTicket.slaHoursRemaining) / 48) * 100))}%`,
-                  }}
-                />
+                      ? 'ESCALATED (>48h)'
+                      : `${Math.floor(selectedTicket.slaHoursRemaining)}h remaining`}
+                  </span>
+                </div>
+
+                <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-500 ${
+                      selectedTicket.status === 'RESOLVED'
+                        ? 'bg-[#16A34A]'
+                        : selectedTicket.status === 'ESCALATED'
+                        ? 'bg-red-600'
+                        : 'bg-amber-500'
+                    }`}
+                    style={{
+                      width: `${Math.min(100, Math.max(5, ((48 - selectedTicket.slaHoursRemaining) / 48) * 100))}%`,
+                    }}
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 text-[11px] pt-1">
+                  <div className={`p-2 rounded-lg border ${
+                    selectedTicket.slaHoursRemaining > 24
+                      ? 'bg-white border-[#16A34A] text-gray-900 font-semibold'
+                      : 'bg-gray-100 text-gray-500 border-gray-200'
+                  }`}>
+                    <span className="block font-bold text-[10px] text-gray-400 uppercase">Tier 1 (0–24h)</span>
+                    <span>{selectedTicket.assignedOfficer}</span>
+                    <span className="block text-[10px] text-gray-500">Ward Engineer</span>
+                  </div>
+
+                  <div className={`p-2 rounded-lg border ${
+                    selectedTicket.slaHoursRemaining <= 24 && selectedTicket.slaHoursRemaining > 0
+                      ? 'bg-amber-50 border-amber-400 text-amber-900 font-semibold'
+                      : 'bg-gray-100 text-gray-500 border-gray-200'
+                  }`}>
+                    <span className="block font-bold text-[10px] text-gray-400 uppercase">Tier 2 (24–48h)</span>
+                    <span>Zonal Superintendent</span>
+                    <span className="block text-[10px] text-gray-500">Traffic Ops Division</span>
+                  </div>
+
+                  <div className={`p-2 rounded-lg border ${
+                    selectedTicket.slaHoursRemaining <= 0
+                      ? 'bg-red-50 border-red-500 text-red-900 font-bold'
+                      : 'bg-gray-100 text-gray-500 border-gray-200'
+                  }`}>
+                    <span className="block font-bold text-[10px] text-gray-400 uppercase">Tier 3 (&gt;48h)</span>
+                    <span>Chief Commissioner</span>
+                    <span className="block text-[10px] text-gray-500">Emergency Escalation</span>
+                  </div>
+                </div>
               </div>
-
-              {/* 3-Tier Hierarchy Steps */}
-              <div className="grid grid-cols-3 gap-2 text-[11px] pt-1">
-                <div className={`p-2 rounded-lg border ${
-                  selectedTicket.slaHoursRemaining > 24
-                    ? 'bg-white border-[#16A34A] text-gray-900 font-semibold'
-                    : 'bg-gray-100 text-gray-500 border-gray-200'
-                }`}>
-                  <span className="block font-bold text-[10px] text-gray-400 uppercase">Tier 1 (0–24h)</span>
-                  <span>{selectedTicket.assignedOfficer}</span>
-                  <span className="block text-[10px] text-gray-500">Ward Engineer</span>
-                </div>
-
-                <div className={`p-2 rounded-lg border ${
-                  selectedTicket.slaHoursRemaining <= 24 && selectedTicket.slaHoursRemaining > 0
-                    ? 'bg-amber-50 border-amber-400 text-amber-900 font-semibold'
-                    : 'bg-gray-100 text-gray-500 border-gray-200'
-                }`}>
-                  <span className="block font-bold text-[10px] text-gray-400 uppercase">Tier 2 (24–48h)</span>
-                  <span>Zonal Superintendent</span>
-                  <span className="block text-[10px] text-gray-500">Traffic Ops Division</span>
-                </div>
-
-                <div className={`p-2 rounded-lg border ${
-                  selectedTicket.slaHoursRemaining <= 0
-                    ? 'bg-red-50 border-red-500 text-red-900 font-bold'
-                    : 'bg-gray-100 text-gray-500 border-gray-200'
-                }`}>
-                  <span className="block font-bold text-[10px] text-gray-400 uppercase">Tier 3 (&gt;48h)</span>
-                  <span>Chief Commissioner</span>
-                  <span className="block text-[10px] text-gray-500">Emergency Escalation</span>
-                </div>
-              </div>
-            </div>
+            )}
 
             {/* Modal Actions */}
             <div className="flex items-center justify-end gap-3 pt-2">
@@ -378,7 +440,9 @@ export const TicketsView: React.FC = () => {
                   }}
                   className="px-4 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition cursor-pointer"
                 >
-                  Mark as Resolved & Close Ticket
+                  {selectedTicket.category === 'NO_HELMET_VIOLATION'
+                    ? 'Mark Fine Paid & Settle Challan'
+                    : 'Mark as Resolved & Close Ticket'}
                 </button>
               )}
             </div>

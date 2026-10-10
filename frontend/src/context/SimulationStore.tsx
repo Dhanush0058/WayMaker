@@ -489,9 +489,9 @@ export const SimulationStoreProvider: React.FC<{ children: React.ReactNode }> = 
       fineAmount: fine,
     };
 
-    setTickets((prev) => [newTicket, ...prev]);
+    setTickets((prev) => [newTicket, ...prev].slice(0, 20));
 
-    // Append to live logs
+    // Append to live logs (cap at 20)
     const newLog: AuditLogEvent = {
       id: `log-${Date.now()}`,
       title: `Ticket #${newTicketId} Generated`,
@@ -501,7 +501,7 @@ export const SimulationStoreProvider: React.FC<{ children: React.ReactNode }> = 
       tagColor: type === 'NO_HELMET' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-red-50 text-red-600 border-red-200',
     };
 
-    setLogs((prev) => [newLog, ...prev.slice(0, 15)]);
+    setLogs((prev) => [newLog, ...prev].slice(0, 20));
   };
 
   const updateTicketStatus = (ticketId: string, newStatus: TicketItem['status']) => {
