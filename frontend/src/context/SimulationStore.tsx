@@ -69,54 +69,52 @@ interface SimulationStoreType {
 
 const SimulationStoreContext = createContext<SimulationStoreType | undefined>(undefined);
 
-// Real Hyderabad inland road corridors (Somajiguda, Banjara Hills, Begumpet, Punjagutta, Ameerpet, Lakdikapul)
+// Real Hyderabad inland road corridors away from Hussain Sagar (Jubilee Hills, Banjara Hills, Ameerpet, SR Nagar, Erragadda, Punjagutta, Masab Tank)
 const INITIAL_BUSES: BusRouteInfo[] = [
   {
     id: '47L',
     busCode: 'TS 09 Z 4712',
-    routeName: 'Secunderabad ⇄ Manikonda via Somajiguda',
+    routeName: 'Jubilee Hills ⇄ Madhapur via Road No. 36',
     driverName: 'K. Raghavan',
     driverContact: '+91 98490 12841',
     speedKmh: 42,
     status: 'IN_TRANSIT',
-    currentLocationName: 'Somajiguda 5th Avenue Junction',
-    lat: 17.4255,
-    lng: 78.4520,
+    currentLocationName: 'Jubilee Hills Checkpost Junction',
+    lat: 17.4280,
+    lng: 78.4120,
     heading: 45,
     occupancy: '38 / 52 Seats',
     waypoints: [
-      [17.4200, 78.4350], // Banjara Hills Rd 10
-      [17.4245, 78.4440], // Nagarjuna Circle
-      [17.4275, 78.4485], // Punjagutta
-      [17.4240, 78.4540], // Somajiguda Raj Bhavan Rd
-      [17.4140, 78.4580], // Khairatabad Flyover
-      [17.4240, 78.4540],
-      [17.4275, 78.4485],
-      [17.4245, 78.4440],
+      [17.4310, 78.4050], // Road 36 / Madhapur
+      [17.4280, 78.4120], // Jubilee Hills Checkpost
+      [17.4240, 78.4210], // Road No. 45 Junction
+      [17.4200, 78.4290], // Banjara Hills Rd 10
+      [17.4240, 78.4210],
+      [17.4280, 78.4120],
     ],
-    currentWaypointIdx: 2,
+    currentWaypointIdx: 1,
     progress: 0.4,
   },
   {
     id: '10H',
     busCode: 'TS 08 UB 1084',
-    routeName: 'Secunderabad ⇄ Kondapur via Begumpet',
+    routeName: 'Ameerpet ⇄ Erragadda via SR Nagar Corridor',
     driverName: 'M. Suresh Kumar',
     driverContact: '+91 97012 34910',
     speedKmh: 36,
     status: 'IN_TRANSIT',
-    currentLocationName: 'Begumpet Airport Road Corridor',
-    lat: 17.4440,
-    lng: 78.4630,
+    currentLocationName: 'SR Nagar Metro Station',
+    lat: 17.4420,
+    lng: 78.4430,
     heading: 120,
     occupancy: '44 / 52 Seats',
     waypoints: [
-      [17.4410, 78.4550], // Begumpet Flyover
-      [17.4440, 78.4630], // Prakash Nagar / Shoppers Stop
-      [17.4465, 78.4710], // Rasoolpura Junction
-      [17.4485, 78.4810], // Paradise Circle
-      [17.4465, 78.4710],
-      [17.4440, 78.4630],
+      [17.4370, 78.4480], // Ameerpet Metro Junction
+      [17.4420, 78.4430], // SR Nagar Main Road
+      [17.4480, 78.4380], // Vengal Rao Nagar / ESI
+      [17.4550, 78.4310], // Erragadda X Roads
+      [17.4480, 78.4380],
+      [17.4420, 78.4430],
     ],
     currentWaypointIdx: 1,
     progress: 0.3,
@@ -124,100 +122,97 @@ const INITIAL_BUSES: BusRouteInfo[] = [
   {
     id: '218',
     busCode: 'TS 11 Z 2180',
-    routeName: 'Koti ⇄ Patancheru via Punjagutta',
+    routeName: 'Punjagutta ⇄ Sanath Nagar via Balkampet',
     driverName: 'P. Venkat Reddy',
     driverContact: '+91 99882 11094',
     speedKmh: 48,
     status: 'IN_TRANSIT',
-    currentLocationName: 'Punjagutta Main Flyover',
-    lat: 17.4278,
-    lng: 78.4485,
+    currentLocationName: 'Ameerpet X Roads Corridor',
+    lat: 17.4340,
+    lng: 78.4450,
     heading: 90,
     occupancy: '49 / 52 Seats',
     waypoints: [
-      [17.4045, 78.4630], // Lakdikapul
-      [17.4130, 78.4585], // Khairatabad Flyover
-      [17.4250, 78.4535], // Somajiguda
-      [17.4278, 78.4485], // Punjagutta X Roads
-      [17.4355, 78.4440], // Ameerpet Metro
-      [17.4278, 78.4485],
-      [17.4250, 78.4535],
-      [17.4130, 78.4585],
+      [17.4260, 78.4480], // Punjagutta Flyover
+      [17.4340, 78.4450], // Ameerpet X Roads
+      [17.4420, 78.4460], // Balkampet Yellamma Temple Rd
+      [17.4520, 78.4480], // Sanath Nagar Industrial Corridor
+      [17.4420, 78.4460],
+      [17.4340, 78.4450],
     ],
-    currentWaypointIdx: 3,
+    currentWaypointIdx: 1,
     progress: 0.5,
   },
   {
     id: '127K',
     busCode: 'TS 09 EA 1279',
-    routeName: 'Koti ⇄ Kondapur via Lakdikapul',
+    routeName: 'Banjara Hills Rd 1 ⇄ Film Nagar via Rd 12',
     driverName: 'T. Narsimha',
     driverContact: '+91 94401 88320',
     speedKmh: 28,
     status: 'TRANSIT_STOP',
-    currentLocationName: 'Lakdikapul Metro Station Bus Bay',
-    lat: 17.4045,
-    lng: 78.4630,
+    currentLocationName: 'Banjara Hills Road No. 12 Junction',
+    lat: 17.4180,
+    lng: 78.4320,
     heading: 180,
     occupancy: '31 / 52 Seats',
     waypoints: [
-      [17.3920, 78.4690], // Nampally Station
-      [17.3990, 78.4670], // Public Gardens
-      [17.4045, 78.4630], // Lakdikapul Metro Bay
-      [17.4050, 78.4460], // Masab Tank
-      [17.3950, 78.4380], // Mehdipatnam
-      [17.4050, 78.4460],
-      [17.4045, 78.4630],
+      [17.4140, 78.4420], // Banjara Hills Rd 1 / Taj Krishna
+      [17.4180, 78.4320], // Banjara Hills Rd 12
+      [17.4190, 78.4210], // Cancer Hospital / KBR Outer
+      [17.4150, 78.4110], // Film Nagar Main Rd
+      [17.4190, 78.4210],
+      [17.4180, 78.4320],
     ],
-    currentWaypointIdx: 2,
+    currentWaypointIdx: 1,
     progress: 0.3,
   },
   {
     id: '222A',
     busCode: 'TS 07 UA 2221',
-    routeName: 'Koti ⇄ Lingampally via Mehdipatnam',
+    routeName: 'Masab Tank ⇄ KBR Park via Banjara Hills Rd 10',
     driverName: 'G. Srinivas Rao',
     driverContact: '+91 91210 99402',
     speedKmh: 34,
     status: 'IN_TRANSIT',
-    currentLocationName: 'Banjara Hills Road No. 12',
-    lat: 17.4180,
-    lng: 78.4350,
+    currentLocationName: 'Banjara Hills Road No. 10 Avenue',
+    lat: 17.4200,
+    lng: 78.4300,
     heading: 270,
     occupancy: '26 / 52 Seats',
     waypoints: [
-      [17.4280, 78.4280], // Jubilee Hills Checkpost
-      [17.4180, 78.4350], // Road No. 12
-      [17.4130, 78.4410], // Road No. 1 / Taj Krishna
-      [17.4050, 78.4460], // Masab Tank
-      [17.4130, 78.4410],
-      [17.4180, 78.4350],
+      [17.4040, 78.4440], // Masab Tank Flyover
+      [17.4120, 78.4390], // Banjara Hills Care Hospital
+      [17.4200, 78.4300], // Banjara Hills Rd 10
+      [17.4260, 78.4220], // KBR Park Gate
+      [17.4200, 78.4300],
+      [17.4120, 78.4390],
     ],
-    currentWaypointIdx: 1,
+    currentWaypointIdx: 2,
     progress: 0.4,
   },
   {
     id: '5K',
     busCode: 'TS 09 Z 0505',
-    routeName: 'Secunderabad ⇄ Mehdipatnam via Minister Road',
+    routeName: 'Yousufguda ⇄ Srinagar Colony ⇄ Jubilee Hills',
     driverName: 'D. Naidu',
     driverContact: '+91 98850 77123',
     speedKmh: 39,
     status: 'IN_TRANSIT',
-    currentLocationName: 'Minister Road Corridor',
-    lat: 17.4420,
-    lng: 78.4780,
+    currentLocationName: 'Yousufguda Main Corridor',
+    lat: 17.4390,
+    lng: 78.4260,
     heading: 330,
     occupancy: '42 / 52 Seats',
     waypoints: [
-      [17.4400, 78.4980], // Secunderabad Station
-      [17.4380, 78.4870], // Ranigunj
-      [17.4420, 78.4780], // Minister Road
-      [17.4440, 78.4680], // Begumpet East
-      [17.4420, 78.4780],
-      [17.4380, 78.4870],
+      [17.4450, 78.4330], // Vengal Rao Nagar
+      [17.4390, 78.4260], // Yousufguda Checkpost
+      [17.4340, 78.4200], // Sri Krishna Nagar
+      [17.4280, 78.4180], // Jubilee Hills / Srinagar Colony Rd
+      [17.4340, 78.4200],
+      [17.4390, 78.4260],
     ],
-    currentWaypointIdx: 2,
+    currentWaypointIdx: 1,
     progress: 0.3,
   },
 ];
@@ -227,8 +222,8 @@ const INITIAL_TICKETS: TicketItem[] = [
     id: 'TK-101',
     category: 'POTHOLE',
     title: 'Severe Pothole & Road Rupture',
-    location: '5th Avenue • Near Somajiguda Junction',
-    coordinates: '17.4255° N, 78.4520° E',
+    location: 'Road No. 36 • Near Jubilee Hills Checkpost',
+    coordinates: '17.4280° N, 78.4120° E',
     detectedBy: 'Bus 47L Onboard AI Camera',
     timestamp: 'Today at 08:14 AM',
     assignedOfficer: 'Eng. R. K. Varma',
@@ -244,8 +239,8 @@ const INITIAL_TICKETS: TicketItem[] = [
     category: 'NO_HELMET_VIOLATION',
     title: 'Rider Without Helmet Violation',
     location: 'Banjara Hills Road No. 12',
-    coordinates: '17.4140° N, 78.4380° E',
-    detectedBy: 'Bus 222A AI Telematics Camera',
+    coordinates: '17.4180° N, 78.4320° E',
+    detectedBy: 'Bus 127K AI Telematics Camera',
     timestamp: 'Today at 09:22 AM',
     assignedOfficer: 'Officer S. Rao',
     officerRole: 'Sub-Inspector Traffic',
@@ -261,8 +256,8 @@ const INITIAL_TICKETS: TicketItem[] = [
     id: 'TK-103',
     category: 'GARBAGE',
     title: 'Municipal Solid Waste Overflow',
-    location: 'Begumpet Airport Road Corridor',
-    coordinates: '17.4420° N, 78.4650° E',
+    location: 'SR Nagar Main Road Corridor',
+    coordinates: '17.4420° N, 78.4430° E',
     detectedBy: 'Bus 10H AI Telematics',
     timestamp: 'Yesterday at 04:30 PM',
     assignedOfficer: 'Insp. Anand Kumar',
@@ -277,8 +272,8 @@ const INITIAL_TICKETS: TicketItem[] = [
     id: 'TK-104',
     category: 'ROAD_DAMAGE',
     title: 'Water-Main Pipe Fracture & Road Flooding',
-    location: 'Punjagutta Flyover Approach',
-    coordinates: '17.4270° N, 78.4480° E',
+    location: 'Punjagutta Main Flyover Approach',
+    coordinates: '17.4278° N, 78.4485° E',
     detectedBy: 'Bus 218 Onboard Camera',
     timestamp: '2 Days Ago at 11:00 AM',
     assignedOfficer: 'Chief Eng. A. Patil',
@@ -293,9 +288,9 @@ const INITIAL_TICKETS: TicketItem[] = [
     id: 'TK-105',
     category: 'POTHOLE',
     title: 'Asphalt Depression Near Bus Bay',
-    location: 'Lakdikapul Metro Station Bay',
-    coordinates: '17.4080° N, 78.4620° E',
-    detectedBy: 'Bus 127K Telematics',
+    location: 'Banjara Hills Road No. 10 Avenue',
+    coordinates: '17.4200° N, 78.4300° E',
+    detectedBy: 'Bus 222A Telematics',
     timestamp: '3 Days Ago at 02:15 PM',
     assignedOfficer: 'Eng. R. K. Varma',
     officerRole: 'Ward Field Engineer',

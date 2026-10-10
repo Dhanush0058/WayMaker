@@ -24,9 +24,9 @@ export const LiveMap: React.FC<LiveMapProps> = ({ onSelectHazard }) => {
   useEffect(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return;
 
-    // Centered over Banjara Hills / Somajiguda / Punjagutta Road Network
+    // Centered over West Hyderabad inland road network (Jubilee Hills, Banjara Hills, Ameerpet, SR Nagar, Punjagutta)
     const map = L.map(mapContainerRef.current, {
-      center: [17.4250, 78.4480],
+      center: [17.4280, 78.4280],
       zoom: 14,
       zoomControl: false,
     });
@@ -134,34 +134,98 @@ export const LiveMap: React.FC<LiveMapProps> = ({ onSelectHazard }) => {
     });
   }, [buses]);
 
-  // 4. Render Map Layer Pulsing Ring for Active Alert
+  // 4. Render On-Map Callout Popup & Pulsing Ring for Active Alert
   useEffect(() => {
     alertLayerGroup.current.clearLayers();
     if (!activeMapAlert || !mapInstanceRef.current) return;
 
+    const isHelmet = activeMapAlert.type === 'NO_HELMET';
+    const alertBg = isHelmet ? '#2563EB' : '#DC2626';
+    const alertIcon = isHelmet ? '🛵' : '⚠️';
+    const alertLabel =
+      activeMapAlert.type === 'POTHOLE'
+        ? 'Pothole Detected'
+        : activeMapAlert.type === 'GARBAGE'
+        ? 'Garbage Overflow Detected'
+        : activeMapAlert.type === 'ROAD_DAMAGE'
+        ? 'Road Damage Detected'
+        : 'No Helmet Violation';
+
+    // 1. Pulsing ring
     const ringIcon = L.divIcon({
       className: 'map-alert-pulse-ring',
       html: `
         <div style="
-          width: 40px;
-          height: 40px;
+          width: 44px;
+          height: 44px;
           border-radius: 50%;
-          border: 3px solid ${activeMapAlert.type === 'NO_HELMET' ? '#3B82F6' : '#DC2626'};
-          background: ${activeMapAlert.type === 'NO_HELMET' ? 'rgba(59,130,246,0.2)' : 'rgba(220,38,38,0.2)'};
-          animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+          border: 3px solid ${alertBg};
+          background: ${isHelmet ? 'rgba(37,99,235,0.25)' : 'rgba(220,38,38,0.25)'};
+          animation: ping 1.2s cubic-bezier(0, 0, 0.2, 1) infinite;
         "></div>
       `,
-      iconSize: [40, 40],
-      iconAnchor: [20, 20],
+      iconSize: [44, 44],
+      iconAnchor: [22, 22],
     });
 
     const ringMarker = L.marker([activeMapAlert.lat, activeMapAlert.lng], {
       icon: ringIcon,
-      zIndexOffset: 999,
+      zIndexOffset: 998,
+    });
+    ringMarker.addTo(alertLayerGroup.current);
+
+    // 2. Floating callout bubble directly above the bus
+    const calloutIcon = L.divIcon({
+      className: 'map-alert-callout-wrapper',
+      html: `
+        <div style="
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          transform: translateY(-46px);
+          pointer-events: auto;
+          cursor: pointer;
+          filter: drop-shadow(0 4px 10px rgba(0,0,0,0.35));
+        ">
+          <div style="
+            background: ${alertBg};
+            color: white;
+            padding: 3px 8px;
+            border-radius: 8px;
+            font-family: system-ui, -apple-system, sans-serif;
+            font-size: 11px;
+            font-weight: 800;
+            border: 2px solid #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+          ">
+            <span style="font-size: 10px;">${alertIcon}</span>
+            <span>Bus ${activeMapAlert.busNumber}: ${alertLabel}</span>
+          </div>
+          <div style="
+            width: 7px;
+            height: 7px;
+            background: ${alertBg};
+            transform: rotate(45deg);
+            margin-top: -4px;
+            border-right: 2px solid #ffffff;
+            border-bottom: 2px solid #ffffff;
+          "></div>
+        </div>
+      `,
+      iconSize: [180, 50],
+      iconAnchor: [90, 25],
     });
 
-    ringMarker.addTo(alertLayerGroup.current);
-  }, [activeMapAlert]);
+    const calloutMarker = L.marker([activeMapAlert.lat, activeMapAlert.lng], {
+      icon: calloutIcon,
+      zIndexOffset: 1000,
+    });
+    calloutMarker.on('click', () => onSelectHazard?.());
+    calloutMarker.addTo(alertLayerGroup.current);
+  }, [activeMapAlert, onSelectHazard]);
 
   return (
     <div className="relative w-full h-full select-none">
